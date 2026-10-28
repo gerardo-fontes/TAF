@@ -21,3 +21,92 @@
  */
 
 @import "tailwindcss";
+
+/* ###########################################################################
+ * Theme system: remap Tailwind neutral + accent colour scales via CSS vars.
+ * ########################################################################### */
+
+html[data-theme] {
+  /* Default (Midnight) neutral + accent parameters */
+  --n-h: 215;
+  --n-s: 16%;
+  --a-h: 221;
+  --a-s: 83%;
+}
+
+html[data-theme="midnight"] {
+  --n-h: 215;
+  --n-s: 16%;
+  --a-h: 221;
+  --a-s: 83%;
+}
+
+html[data-theme="ocean"] {
+  --n-h: 212;
+  --n-s: 34%;
+  --a-h: 188;
+  --a-s: 94%;
+}
+
+html[data-theme="forest"] {
+  --n-h: 150;
+  --n-s: 22%;
+  --a-h: 158;
+  --a-s: 80%;
+}
+
+html[data-theme="ember"] {
+  --n-h: 30;
+  --n-s: 20%;
+  --a-h: 38;
+  --a-s: 92%;
+}
+
+html[data-theme="violet"] {
+  --n-h: 265;
+  --n-s: 26%;
+  --a-h: 275;
+  --a-s: 85%;
+}
+
+/* Map Tailwind colour tokens to the theme parameters above. */
+html[data-theme] {
+  --color-slate-50:  hsl(var(--n-h) var(--n-s) 98%);
+  --color-slate-100: hsl(var(--n-h) var(--n-s) 96%);
+  --color-slate-200: hsl(var(--n-h) var(--n-s) 90%);
+  --color-slate-300: hsl(var(--n-h) var(--n-s) 84%);
+  --color-slate-400: hsl(var(--n-h) var(--n-s) 66%);
+  --color-slate-500: hsl(var(--n-h) var(--n-s) 47%);
+  --color-slate-600: hsl(var(--n-h) var(--n-s) 35%);
+  --color-slate-700: hsl(var(--n-h) var(--n-s) 27%);
+  --color-slate-800: hsl(var(--n-h) var(--n-s) 17%);
+  --color-slate-900: hsl(var(--n-h) var(--n-s) 10%);
+  --color-slate-950: hsl(var(--n-h) var(--n-s) 4%);
+
+  --color-gray-50:  hsl(var(--n-h) var(--n-s) 98%);
+  --color-gray-100: hsl(var(--n-h) var(--n-s) 96%);
+  --color-gray-200: hsl(var(--n-h) var(--n-s) 90%);
+  --color-gray-300: hsl(var(--n-h) var(--n-s) 84%);
+  --color-gray-400: hsl(var(--n-h) var(--n-s) 66%);
+  --color-gray-500: hsl(var(--n-h) var(--n-s) 47%);
+  --color-gray-600: hsl(var(--n-h) var(--n-s) 35%);
+  --color-gray-700: hsl(var(--n-h) var(--n-s) 27%);
+  --color-gray-800: hsl(var(--n-h) var(--n-s) 17%);
+  --color-gray-900: hsl(var(--n-h) var(--n-s) 10%);
+  --color-gray-950: hsl(var(--n-h) var(--n-s) 4%);
+
+  --color-blue-400: hsl(var(--a-h) var(--a-s) 68%);
+  --color-blue-500: hsl(var(--a-h) var(--a-s) 60%);
+  --color-blue-600: hsl(var(--a-h) var(--a-s) 52%);
+  --color-blue-700: hsl(var(--a-h) var(--a-s) 44%);
+  --color-blue-800: hsl(var(--a-h) var(--a-s) 36%);
+  --color-blue-900: hsl(var(--a-h) var(--a-s) 26%);
+  --color-blue-950: hsl(var(--a-h) var(--a-s) 14%);
+
+  --color-indigo-400: hsl(calc(var(--a-h) + 24) var(--a-s) 68%);
+  --color-indigo-500: hsl(calc(var(--a-h) + 24) var(--a-s) 60%);
+  --color-indigo-600: hsl(calc(var(--a-h) + 24) var(--a-s) 52%);
+  --color-indigo-700: hsl(calc(var(--a-h) + 24) var(--a-s) 44%);
+  --color-indigo-900: hsl(calc(var(--a-h) + 24) var(--a-s) 26%);
+  --color-indigo-950: hsl(calc(var(--a-h) + 24) var(--a-s) 14%);
+}

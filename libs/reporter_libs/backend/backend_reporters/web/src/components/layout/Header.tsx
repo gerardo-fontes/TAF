@@ -25,6 +25,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { ThemeSwitcher } from '@/components/theme/ThemeSwitcher';
 
 export function Header() {
   const pathname = usePathname();
@@ -87,6 +88,7 @@ export function Header() {
             <span className="font-mono text-emerald-400 font-medium">taf_backend</span>
           </div>
 
+          <ThemeSwitcher />
           <span className="rounded-full border border-amber-500/30 bg-amber-500/10 px-2.5 py-0.5 text-[11px] font-medium text-amber-300">
             Read-Only
           </span>

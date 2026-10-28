@@ -44,7 +44,15 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" data-theme="midnight" suppressHydrationWarning>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              '(function(){try{var t=localStorage.getItem("taf-theme");if(t){try{t=JSON.parse(t).state.themeId;}catch(e){} } if(!t) t="midnight"; document.documentElement.setAttribute("data-theme", t);}catch(e){document.documentElement.setAttribute("data-theme","midnight");}})();',
+          }}
+        />
+      </head>
       <body className="min-h-screen bg-slate-950 text-slate-100 antialiased font-sans flex flex-col">
         <Header />
         <div className="flex-1">
