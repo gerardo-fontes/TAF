@@ -182,3 +182,29 @@ export interface DashboardData {
   multiHostWarning: boolean;
   distinctHostsCount: number;
 }
+
+export interface SystemFacet {
+  id: string;
+  hostName: string;
+  cpuModel: string;
+  architecture: string;
+  totalRamGb: number;
+  runCount: number;
+}
+
+export interface WorkloadHashFacet {
+  workloadHash: string;
+  suiteName: string;
+  runCount: number;
+}
+
+export interface RunFacets {
+  suites: Array<{ name: string; count: number }>;
+  dbMakers: string[];
+  dbVersions: string[];
+  systems: SystemFacet[];
+  workloadHashes: WorkloadHashFacet[];
+  tags: string[];
+  totalRuns: number;
+}
+

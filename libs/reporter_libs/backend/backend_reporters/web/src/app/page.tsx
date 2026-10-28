@@ -12,51 +12,94 @@
  * # it under the terms of the GNU General Public License as published by
  * # the Free Software Foundation; version 2 or later of the License.
  * #
- * # This program is distributed in the hope that it will be useful,
- * # but WITHOUT ANY WARRANTY; without even the implied warranty of
- * # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * # GNU General Public License for more details.
- * #
- * # You should have received a copy of the GNU General Public License
- * # along with this program; if not, write to the Free Software
- * # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1335
- * #
  * # Licensed under the GNU General Public License, version 2 or later (GPLv2+).
  * # See https://www.gnu.org/licenses/ for details.
  * #
  * # PURPOSE:
- * # Root page component for TAF web frontend.
+ * # Server Component for the Run Browser. Reads searchParams on the server,
+ * # pre-fetches runs and facets, and renders the accessible RunTable and FilterBar.
  * #############################################################################
  */
 
-export default function HomePage() {
+import React from 'react';
+import { listRuns, type RunFilters } from '@/lib/db/queries/runs';
+import { listFacets } from '@/lib/db/queries/facets';
+import { FilterBar } from '@/components/runs/FilterBar';
+import { RunTable } from '@/components/runs/RunTable';
+import { RunTableEmpty } from '@/components/runs/RunTableEmpty';
+import { CompareActionBar } from '@/components/runs/CompareActionBar';
+
+export const dynamic = 'force-dynamic';
+
+interface PageProps {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}
+
+export default async function RunsPage({ searchParams }: PageProps) {
+  const sp = await searchParams;
+
+  const filters: RunFilters = {
+    suite: typeof sp.suite === 'string' ? sp.suite : undefined,
+    host: typeof sp.host === 'string' ? sp.host : undefined,
+    dbVersion: typeof sp.dbVersion === 'string' ? sp.dbVersion : undefined,
+    workloadHash: typeof sp.workloadHash === 'string' ? sp.workloadHash : undefined,
+    tag: typeof sp.tag === 'string' ? sp.tag : undefined,
+    isBaseline: sp.baseline === 'true' ? true : sp.baseline === 'false' ? false : undefined,
+    days: sp.days ? parseInt(sp.days as string, 10) : undefined,
+    search: typeof sp.search === 'string' ? sp.search : undefined,
+    cursor: typeof sp.cursor === 'string' ? sp.cursor : null,
+    limit: 25,
+  };
+
+  const [runsResult, facets] = await Promise.all([
+    listRuns(filters),
+    listFacets(),
+  ]);
+
+  const hasActiveFilters = Boolean(
+    filters.suite ||
+    filters.host ||
+    filters.dbVersion ||
+    filters.workloadHash ||
+    filters.tag ||
+    filters.isBaseline !== undefined ||
+    filters.days ||
+    filters.search
+  );
+
   return (
-    <main className="p-8 max-w-7xl mx-auto">
-      <div className="border border-slate-800 bg-slate-900/60 rounded-xl p-8 backdrop-blur shadow-2xl">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="h-3 w-3 rounded-full bg-emerald-500 animate-pulse" />
-          <h1 className="text-2xl font-bold tracking-tight text-white">
-            TAF Web Frontend — Foundation Ready
+    <main className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+      {/* Title & Context Banner */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight text-white flex items-center gap-2">
+            Test Run Browser
+            <span className="text-xs font-normal text-slate-400 bg-slate-900 border border-slate-800 px-2 py-0.5 rounded-full">
+              {facets.totalRuns} total runs
+            </span>
           </h1>
-        </div>
-        <p className="text-slate-400 mb-6 leading-relaxed">
-          The read-only data layer, connection pool, and REST API routes for MariaDB TAF backend are initialized.
-        </p>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs font-mono">
-          <div className="p-3 bg-slate-950/80 rounded border border-slate-800">
-            <span className="text-slate-500 block">Health Endpoint</span>
-            <span className="text-emerald-400">/api/health</span>
-          </div>
-          <div className="p-3 bg-slate-950/80 rounded border border-slate-800">
-            <span className="text-slate-500 block">Runs Endpoint</span>
-            <span className="text-blue-400">/api/runs</span>
-          </div>
-          <div className="p-3 bg-slate-950/80 rounded border border-slate-800">
-            <span className="text-slate-500 block">Dashboard API</span>
-            <span className="text-purple-400">/api/dashboard</span>
-          </div>
+          <p className="text-xs text-slate-400 mt-1">
+            Browse and filter benchmark runs across test suites, systems, and database versions. Select any 2 runs to compare.
+          </p>
         </div>
       </div>
+
+      {/* Filter Bar */}
+      <FilterBar facets={facets} />
+
+      {/* Run Listing Table or Empty State */}
+      {runsResult.data.length === 0 ? (
+        <RunTableEmpty hasFilters={hasActiveFilters} />
+      ) : (
+        <RunTable
+          runs={runsResult.data}
+          nextCursor={runsResult.meta.nextCursor}
+          hasMore={runsResult.meta.hasMore}
+        />
+      )}
+
+      {/* Floating 2-Run Comparison Action Bar */}
+      <CompareActionBar />
     </main>
   );
 }
