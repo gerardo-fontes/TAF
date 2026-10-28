@@ -105,9 +105,15 @@ export async function getCandidateBaselines(candidateId: string): Promise<RunSum
  *  4. Only primary or NULL metric types compared.
  *  5. Max change row selected by largest absolute RAW delta (ORDER BY ABS(raw_diff) DESC).
  */
+export interface ComputeComparisonOptions {
+  force?: boolean;
+  thresholds?: Partial<typeof DEFAULT_THRESHOLDS>;
+}
+
 export async function computeComparison(
   baselineId: string,
-  candidateId: string
+  candidateId: string,
+  options: ComputeComparisonOptions = {}
 ): Promise<ComparisonResult> {
   // 1. Fetch metadata and thresholds from both runs
   const metaSql = `
@@ -125,10 +131,10 @@ export async function computeComparison(
   }
 
   const thresholds = {
-    pctWarning: Number(baselineMeta.pct_warning ?? DEFAULT_THRESHOLDS.pctWarning),
-    pctFail: Number(baselineMeta.pct_fail ?? DEFAULT_THRESHOLDS.pctFail),
-    pctGain: Number(baselineMeta.pct_gain ?? DEFAULT_THRESHOLDS.pctGain),
-    pctDurationDrift: Number(baselineMeta.pct_duration_drift ?? DEFAULT_THRESHOLDS.pctDurationDrift),
+    pctWarning: Number(options.thresholds?.pctWarning ?? baselineMeta.pct_warning ?? DEFAULT_THRESHOLDS.pctWarning),
+    pctFail: Number(options.thresholds?.pctFail ?? baselineMeta.pct_fail ?? DEFAULT_THRESHOLDS.pctFail),
+    pctGain: Number(options.thresholds?.pctGain ?? baselineMeta.pct_gain ?? DEFAULT_THRESHOLDS.pctGain),
+    pctDurationDrift: Number(options.thresholds?.pctDurationDrift ?? baselineMeta.pct_duration_drift ?? DEFAULT_THRESHOLDS.pctDurationDrift),
   };
 
   // 2. Compatibility Check (Workload Hash Guard)
@@ -137,12 +143,12 @@ export async function computeComparison(
     Boolean(candidateMeta.workload_hash) &&
     baselineMeta.workload_hash === candidateMeta.workload_hash;
 
-  if (!isCompatible) {
+  if (!isCompatible && !options.force) {
     return {
       baselineId: String(baselineId),
       candidateId: String(candidateId),
       compatible: false,
-      incompatibleReason: `Workloads are incompatible: baseline workload_hash (${baselineMeta.workload_hash || 'none'}) does not match candidate (${candidateMeta.workload_hash || 'none'}). Comparisons across different workloads are invalid.`,
+      incompatibleReason: `Workloads are incompatible: baseline workload_hash (${baselineMeta.workload_hash || 'none'}) does not match candidate (${candidateMeta.workload_hash || 'none'}). Comparisons across different workloads may yield misleading conclusions.`,
       status: 'PAR',
       thresholds,
       threadOfMaxChange: 0,
@@ -248,7 +254,10 @@ export async function computeComparison(
   return {
     baselineId: String(baselineId),
     candidateId: String(candidateId),
-    compatible: true,
+    compatible: isCompatible,
+    incompatibleReason: !isCompatible
+      ? `Workloads are incompatible: baseline workload_hash (${baselineMeta.workload_hash || 'none'}) does not match candidate (${candidateMeta.workload_hash || 'none'}). Comparing anyway as requested.`
+      : undefined,
     status,
     thresholds,
     threadOfMaxChange,

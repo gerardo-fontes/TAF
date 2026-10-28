@@ -108,4 +108,38 @@ describe('computeComparison Parity with TAF do_compare()', () => {
       expect(baselines[0].testCaseTag).toBe('MDEV39497_BASELINE');
     }
   });
+
+  it('allows forced comparison on incompatible workloads when force=true', async () => {
+    const [runs] = await query<any[]>(
+      `SELECT
+         (SELECT id FROM test_run WHERE is_baseline = TRUE LIMIT 1) AS baseline_id,
+         (SELECT id FROM test_run WHERE test_case_tag = 'TPCC_SCALE_200_INCOMPATIBLE' LIMIT 1) AS incompatible_id;`
+    );
+
+    if (runs?.baseline_id && runs?.incompatible_id) {
+      const result = await computeComparison(String(runs.baseline_id), String(runs.incompatible_id), { force: true });
+      expect(result.compatible).toBe(false);
+      expect(result.incompatibleReason).toBeDefined();
+      // Rows should still be computed in force mode
+      expect(result.rows.length).toBeGreaterThan(0);
+    }
+  });
+
+  it('honors dynamic threshold overrides in comparison computation', async () => {
+    // Run 1 vs Run 2 is GAIN with default +5% threshold.
+    // Overriding pctGain to +50% should turn the status into PAR+!
+    const [stored] = await query<any[]>(
+      `SELECT baseline_run_id, candidate_run_id FROM test_run_comparison WHERE status = 'GAIN' LIMIT 1;`
+    );
+
+    if (stored) {
+      const custom = await computeComparison(
+        String(stored.baseline_run_id),
+        String(stored.candidate_run_id),
+        { thresholds: { pctGain: 50 } }
+      );
+      expect(custom.status).toBe('PAR+');
+      expect(custom.thresholds.pctGain).toBe(50);
+    }
+  });
 });

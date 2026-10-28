@@ -47,8 +47,20 @@ export async function GET(request: NextRequest) {
     );
   }
 
+  const force = searchParams.get('force') === 'true';
+  const pctWarning = searchParams.get('pctWarning') ? parseFloat(searchParams.get('pctWarning')!) : undefined;
+  const pctFail = searchParams.get('pctFail') ? parseFloat(searchParams.get('pctFail')!) : undefined;
+  const pctGain = searchParams.get('pctGain') ? parseFloat(searchParams.get('pctGain')!) : undefined;
+
   try {
-    const comparison = await computeComparison(baseline, candidate);
+    const comparison = await computeComparison(baseline, candidate, {
+      force,
+      thresholds: {
+        ...(pctWarning !== undefined && !isNaN(pctWarning) ? { pctWarning } : {}),
+        ...(pctFail !== undefined && !isNaN(pctFail) ? { pctFail } : {}),
+        ...(pctGain !== undefined && !isNaN(pctGain) ? { pctGain } : {}),
+      },
+    });
 
     // If runs are incompatible, return 200 with compatible: false so the UI can explain why
     return apiSuccess(comparison);
