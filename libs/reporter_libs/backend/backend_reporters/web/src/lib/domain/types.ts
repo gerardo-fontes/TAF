@@ -123,6 +123,13 @@ export interface ComparisonDeltaRow {
   changePct: number;
   metricUnit?: string;
   isMaxDelta?: boolean;
+  baselineMin?: number;
+  baselineMax?: number;
+  baselineStdDev?: number;
+  candidateMin?: number;
+  candidateMax?: number;
+  candidateStdDev?: number;
+  iterationsCount?: number;
 }
 
 export interface ComparisonResult {

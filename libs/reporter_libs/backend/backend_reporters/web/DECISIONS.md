@@ -123,3 +123,13 @@ This document records the foundational decisions agreed upon with the TAF mainta
 - **Date:** October 2026
 - **Rationale:**
   Preserves TAF's licensing terms (GPLv2 or later) and provides contributor attribution for the web frontend architecture.
+
+---
+
+## 9. Chart.js Coexistence & Modern Charting Architecture
+
+- **Decision:** The web frontend implements its thread-scaling and comparison charts using its own isolated stack (`d3-scale`, `d3-shape`, and SVG) and leaves the existing Perl reporters (`chart_and_tables_html.pm`, `chart_and_test_info_results_tables_html.pm`, etc.) untouched.
+- **Date:** October 2026
+- **Rationale:**
+  TAF's Perl reporter `chart_and_tables_html.pm` generates static HTML embedding Chart.js from a CDN (`<script src="https://cdn.jsdelivr.net/npm/chart.js">`). The web frontend does not replace, modify, or deprecate this reporter. Instead, the web frontend complements existing reporters by providing an interactive, accessible dashboard over the database within its own isolated Node.js/Next.js stack. The web frontend uses `d3-scale` and `d3-shape` directly for log₂-scaled doubling thread axes and threshold bands without installing the full D3 bundle or altering any Perl files.
+

@@ -169,6 +169,13 @@ export async function computeComparison(
       COALESCE(MAX(b.metric_unit), '') AS metric_unit,
       AVG(b.metric_value) AS baseline_value,
       AVG(c.metric_value) AS candidate_value,
+      MIN(b.metric_value) AS baseline_min,
+      MAX(b.metric_value) AS baseline_max,
+      COALESCE(STDDEV(b.metric_value), 0) AS baseline_stddev,
+      MIN(c.metric_value) AS candidate_min,
+      MAX(c.metric_value) AS candidate_max,
+      COALESCE(STDDEV(c.metric_value), 0) AS candidate_stddev,
+      COUNT(b.metric_value) AS iterations_count,
       (AVG(c.metric_value) - AVG(b.metric_value)) AS raw_diff,
       CASE
         WHEN AVG(b.metric_value) = 0 THEN 0
@@ -240,6 +247,13 @@ export async function computeComparison(
     rawDiff: Number(r.raw_diff),
     changePct: Number(r.change_pct),
     isMaxDelta: r.threads === maxRow.threads && r.metric_name === maxRow.metric_name,
+    baselineMin: r.baseline_min !== null ? Number(r.baseline_min) : undefined,
+    baselineMax: r.baseline_max !== null ? Number(r.baseline_max) : undefined,
+    baselineStdDev: r.baseline_stddev !== null ? Number(r.baseline_stddev) : undefined,
+    candidateMin: r.candidate_min !== null ? Number(r.candidate_min) : undefined,
+    candidateMax: r.candidate_max !== null ? Number(r.candidate_max) : undefined,
+    candidateStdDev: r.candidate_stddev !== null ? Number(r.candidate_stddev) : undefined,
+    iterationsCount: r.iterations_count !== null ? Number(r.iterations_count) : undefined,
   }));
 
   // 6. Cross-check against stored test_run_comparison table if TAF already computed it
