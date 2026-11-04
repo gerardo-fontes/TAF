@@ -3,7 +3,7 @@
  * # web::src::components::dashboard::DashboardClientView.tsx
  * #
  * # Created: October 2026
- * # Last Modified: October 2026
+ * # Last Modified: November 2026
  * #
  * # This file is part of the Test Automation Framework (TAF).
  * # Copyright (c) 2025-2026 MariaDB Foundation, Jonathan "jeb" Miller and Gerardo Fontes
@@ -31,6 +31,7 @@ import { DashboardHeader } from './DashboardHeader';
 import { DashboardFilterBar } from './DashboardFilterBar';
 import { StatusRollupCards } from './StatusRollupCards';
 import { MultiHostWarning } from './MultiHostWarning';
+import { DashboardResultsTable } from './DashboardResultsTable';
 import { RegressionFeed } from './RegressionFeed';
 import { DailyTimelineChart } from './DailyTimelineChart';
 import { SuiteHealthTable } from './SuiteHealthTable';
@@ -231,6 +232,14 @@ export function DashboardClientView({ initialData, initialFilters }: DashboardCl
         filters={filters}
         onChangeFilters={handleChangeFilters}
         onClearFilters={handleClearFilters}
+      />
+
+      {/* Results Matrix: candidate runs x days, with triage popup */}
+      <DashboardResultsTable
+        rows={data.resultRows}
+        triageByComparison={data.triageByComparison}
+        filters={filters}
+        days={days}
       />
 
       {/* Severity-Sorted Regression Feed (Milestones 5.3, 5.4, 5.5) */}

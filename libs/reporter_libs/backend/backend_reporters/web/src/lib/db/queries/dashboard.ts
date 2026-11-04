@@ -31,7 +31,7 @@
  * #############################################################################
  */
 
-import { query } from '../pool';
+import { query, getPool } from '../pool';
 import { decodeCursor, encodeCursor } from '../../api/pagination';
 import type {
   ComparisonStatus,
@@ -39,10 +39,13 @@ import type {
   DashboardData,
   DashboardRollup,
   DashboardFeedItem,
+  DashboardResultRow,
   DashboardDailyTimelinePoint,
   DashboardSuiteHealth,
   DashboardSystemInventoryItem,
   DashboardBaselineCoverage,
+  TriageEntry,
+  WorkflowStatus,
 } from '../../domain/types';
 
 /**
@@ -260,7 +263,33 @@ export async function getDashboardData(filters: DashboardFilters = {}): Promise<
     ${whereSql};
   `;
 
-  // Execute all 7 queries concurrently through the connection pool
+  // 8. Results Matrix rows (DashboardResultsTable): ALL filtered comparisons
+  // (not paginated like the feed), keyed to days by candidate run timestamp.
+  const matrixSql = `
+    SELECT
+      c.id AS comparison_id,
+      c.baseline_run_id,
+      c.candidate_run_id,
+      c.status,
+      c.thread_of_max_change,
+      c.max_change_pct,
+      r.test_timestamp AS created_at,
+      r.test_name AS candidate_test_name,
+      r.suite_name,
+      r.db_maker,
+      r.db_version,
+      r.test_case_tag,
+      s.host_name,
+      b.test_name AS baseline_test_name
+    FROM test_run_comparison c
+    JOIN test_run r ON r.id = c.candidate_run_id
+    JOIN test_run b ON b.id = c.baseline_run_id
+    JOIN system_under_test s ON s.id = r.system_id
+    ${feedWhereSql}
+    ORDER BY r.test_timestamp ASC, c.id ASC;
+  `;
+
+  // Execute all 8 queries concurrently through the connection pool
   const [
     rollupRows,
     hostRows,
@@ -269,6 +298,7 @@ export async function getDashboardData(filters: DashboardFilters = {}): Promise<
     suiteHealthRows,
     inventoryRows,
     coverageRows,
+    matrixRows,
   ] = await Promise.all([
     query<any[]>(rollupSql, params),
     query<any[]>(hostCountSql, hostCountParams),
@@ -277,6 +307,7 @@ export async function getDashboardData(filters: DashboardFilters = {}): Promise<
     query<any[]>(suiteHealthSql, params),
     query<any[]>(inventorySql, params),
     query<any[]>(coverageSql, params),
+    query<any[]>(matrixSql, feedBaseParams),
   ]);
 
   // Process Rollups
@@ -378,6 +409,63 @@ export async function getDashboardData(filters: DashboardFilters = {}): Promise<
     coveragePct,
   };
 
+  // Process Results Matrix rows (DashboardResultsTable)
+  const resultRows: DashboardResultRow[] = matrixRows.map((row) => ({
+    comparisonId: String(row.comparison_id),
+    baselineRunId: String(row.baseline_run_id),
+    candidateRunId: String(row.candidate_run_id),
+    status: row.status as ComparisonStatus,
+    threadOfMaxChange: Number(row.thread_of_max_change),
+    maxChangePct: Number(row.max_change_pct),
+    createdAt: String(row.created_at),
+    candidateTestName: row.candidate_test_name,
+    suiteName: row.suite_name,
+    dbMaker: row.db_maker,
+    dbVersion: row.db_version,
+    testCaseTag: row.test_case_tag,
+    hostName: row.host_name,
+    baselineTestName: row.baseline_test_name,
+  }));
+
+  // Fetch latest engineer triage entries for the matrix comparisons.
+  // The comparison_triage table is an optional schema extension; degrade
+  // gracefully to an empty map if it has not been provisioned yet.
+  const triageByComparison: Record<string, TriageEntry> = {};
+  if (resultRows.length > 0) {
+    try {
+      const triageIds = resultRows.map((r) => BigInt(r.comparisonId));
+      const triageSql = `
+        SELECT
+          t.id,
+          t.comparison_id,
+          t.engineer,
+          t.comment,
+          t.workflow_status,
+          t.updated_at
+        FROM comparison_triage t
+        JOIN (
+          SELECT comparison_id, MAX(id) AS max_id
+          FROM comparison_triage
+          WHERE comparison_id IN (${triageIds.map(() => '?').join(',')})
+          GROUP BY comparison_id
+        ) latest ON latest.max_id = t.id;
+      `;
+      const triageRows = await query<any[]>(triageSql, triageIds as any[]);
+      for (const r of triageRows) {
+        triageByComparison[String(r.comparison_id)] = {
+          id: String(r.id),
+          comparisonId: String(r.comparison_id),
+          engineer: String(r.engineer),
+          comment: String(r.comment ?? ''),
+          workflowStatus: String(r.workflow_status) as WorkflowStatus,
+          updatedAt: String(r.updated_at),
+        };
+      }
+    } catch (err: any) {
+      console.warn('comparison_triage unavailable, serving empty triage map:', err?.message);
+    }
+  }
+
   return {
     timeWindowDays: days,
     filters,
@@ -392,5 +480,50 @@ export async function getDashboardData(filters: DashboardFilters = {}): Promise<
     suiteHealth,
     systemInventory,
     baselineCoverage,
+    resultRows,
+    triageByComparison,
+  };
+}
+
+/**
+ * Upsert an engineer's triage record (comment + workflow action) for a
+ * comparison. Called by POST /api/dashboard/triage from the
+ * DashboardResultsTable cell popup. Returns the persisted entry.
+ */
+export async function saveTriage(input: {
+  comparisonId: string;
+  engineer: string;
+  comment: string;
+  workflowStatus: WorkflowStatus;
+}): Promise<TriageEntry> {
+  const p = getPool();
+
+  // Use the insertId from the INSERT result. LAST_INSERT_ID() is per
+  // connection, and the pool may run a follow-up SELECT on a different one.
+  const [result] = await p.execute<any>(
+    `INSERT INTO comparison_triage
+       (comparison_id, engineer, comment, workflow_status, updated_at)
+     VALUES (?, ?, ?, ?, NOW())`,
+    [input.comparisonId, input.engineer, input.comment, input.workflowStatus]
+  );
+  const insertId = String(result.insertId);
+
+  const [rows] = await p.execute<any[]>(
+    `SELECT id, comparison_id, engineer, comment, workflow_status, updated_at
+       FROM comparison_triage
+      WHERE id = ?`,
+    [insertId]
+  );
+  const row = rows[0];
+  if (!row) {
+    throw new Error(`Triage row ${insertId} was inserted but could not be read back`);
+  }
+  return {
+    id: String(row.id),
+    comparisonId: String(row.comparison_id),
+    engineer: String(row.engineer),
+    comment: String(row.comment ?? ''),
+    workflowStatus: String(row.workflow_status) as WorkflowStatus,
+    updatedAt: String(row.updated_at),
   };
 }

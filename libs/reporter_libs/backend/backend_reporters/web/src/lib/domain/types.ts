@@ -215,6 +215,57 @@ export interface DashboardBaselineCoverage {
   coveragePct: number;
 }
 
+/**
+ * Workflow triage states selectable by engineers on a dashboard result cell
+ * (DashboardResultsTable). Persisted in the `comparison_triage` table.
+ */
+export const WORKFLOW_STATUSES = [
+  'Investigating',
+  'Reproduced',
+  'Documented',
+  'Fix In Progress',
+  'Fixed',
+  'Blocked',
+  'Decided to Leave As Is',
+] as const;
+
+export type WorkflowStatus = (typeof WORKFLOW_STATUSES)[number];
+
+/**
+ * One comparison record for the Dashboard Results Matrix table:
+ * rows = candidate runs, columns = days in the active time window.
+ */
+export interface DashboardResultRow {
+  comparisonId: string;
+  baselineRunId: string;
+  candidateRunId: string;
+  status: ComparisonStatus;
+  threadOfMaxChange: number;
+  maxChangePct: number;
+  /** Candidate run test timestamp (raw DATETIME string, dateStrings mode). */
+  createdAt: string;
+  candidateTestName: string;
+  suiteName: string;
+  dbMaker: string;
+  dbVersion: string;
+  testCaseTag?: string | null;
+  hostName: string;
+  baselineTestName: string;
+}
+
+/**
+ * Latest engineer triage entry (comment + workflow action) attached to a
+ * comparison, as stored in the `comparison_triage` table.
+ */
+export interface TriageEntry {
+  id: string;
+  comparisonId: string;
+  engineer: string;
+  comment: string;
+  workflowStatus: WorkflowStatus;
+  updatedAt: string;
+}
+
 export interface DashboardFilters {
   days?: number;
   suite?: string;
@@ -242,6 +293,10 @@ export interface DashboardData {
   suiteHealth: DashboardSuiteHealth[];
   systemInventory: DashboardSystemInventoryItem[];
   baselineCoverage: DashboardBaselineCoverage;
+  /** All filtered comparisons for the results matrix (DashboardResultsTable). */
+  resultRows?: DashboardResultRow[];
+  /** Latest engineer triage entries keyed by comparison id. */
+  triageByComparison?: Record<string, TriageEntry>;
 }
 
 export interface SystemFacet {

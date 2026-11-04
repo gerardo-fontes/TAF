@@ -461,6 +461,38 @@ CREATE TABLE test_run_comparison (
     UNIQUE KEY uq_comparison_hash (comparison_hash)
 );
 
+#===============================================================================
+# TABLE: comparison_triage
+#
+# PURPOSE:
+#     Persists engineer triage records (free-form comments + user workflow
+#     action) submitted from the dashboard results matrix
+#     (DashboardResultsTable cell popup). Every entry is saved under the
+#     name of the submitting engineer. The dashboard always renders the
+#     most recent entry per comparison (MAX(id)).
+#
+# WORKFLOW ACTIONS:
+#     Investigating | Reproduced | Documented | Fix In Progress | Fixed |
+#     Blocked | Decided to Leave As Is
+#===============================================================================
+CREATE TABLE comparison_triage (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+
+    comparison_id            BIGINT NOT NULL,
+
+    engineer                 VARCHAR(255) NOT NULL,
+    comment                  TEXT,
+    workflow_status          VARCHAR(64) NOT NULL,
+
+    updated_at               DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT fk_triage_comparison
+        FOREIGN KEY (comparison_id)
+        REFERENCES test_run_comparison(id),
+
+    INDEX idx_triage_comparison (comparison_id)
+);
+
 ####
 # TAF Backend Stored Procedures
 ####
