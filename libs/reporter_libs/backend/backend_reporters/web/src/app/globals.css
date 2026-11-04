@@ -27,7 +27,7 @@
  * ########################################################################### */
 
 html[data-theme] {
-  /* Default (Midnight) neutral + accent parameters */
+  /* Default (MariaDB light) neutral + accent parameters */
   --n-h: 215;
   --n-s: 16%;
   --a-h: 221;
@@ -67,6 +67,46 @@ html[data-theme="violet"] {
   --n-s: 26%;
   --a-h: 275;
   --a-s: 85%;
+}
+
+/* ---- Light themes -------------------------------------------------------- */
+
+/* Official MariaDB Foundation site palette (mariadb.org):
+   slate-blue ink (#355872/#48729e, hue ~206) over a faintly warm ivory
+   ground (#F7F8F0), with the site's rust accent (#964A2C). The neutral
+   scale is anchored on blue so surfaces read cool like the official site;
+   --page-bg keeps the barely-warm ivory of the real background. */
+html[data-theme="mariadb"] {
+  --n-h: 206;
+  --n-s: 18%;
+  --a-h: 20;
+  --a-s: 54%;
+  --brand-ink: #355872;
+  --page-bg: hsl(60 20% 97%);
+}
+
+html[data-theme="seafoam"] {
+  --n-h: 195;
+  --n-s: 25%;
+  --a-h: 200;
+  --a-s: 78%;
+  --brand-ink: #0b4f6c;
+}
+
+html[data-theme="paper"] {
+  --n-h: 215;
+  --n-s: 16%;
+  --a-h: 221;
+  --a-s: 83%;
+  --brand-ink: #1e293b;
+}
+
+html[data-theme="dune"] {
+  --n-h: 40;
+  --n-s: 33%;
+  --a-h: 25;
+  --a-s: 85%;
+  --brand-ink: #44403c;
 }
 
 /* Map Tailwind colour tokens to the theme parameters above. */
@@ -109,6 +149,53 @@ html[data-theme] {
   --color-indigo-700: hsl(calc(var(--a-h) + 24) var(--a-s) 44%);
   --color-indigo-900: hsl(calc(var(--a-h) + 24) var(--a-s) 26%);
   --color-indigo-950: hsl(calc(var(--a-h) + 24) var(--a-s) 14%);
+}
+
+/* ###########################################################################
+ * Light-theme support: the five original themes are dark; the four light
+ * themes (mariadb/seafoam/paper/dune) need two extra remaps because some
+ * markup hardcodes pure-white ink and the vendored MariaDB Foundation logo
+ * ships as white+transparent artwork.
+ * ########################################################################### */
+
+/* Theme-aware brand ink (e.g. header wordmark) — dark on light themes. */
+html[data-theme] {
+  --brand-ink: #ffffff;
+}
+
+/* Hardcoded pure-white ink must flip to dark ink on light themes. */
+html[data-theme="mariadb"] .text-white,
+html[data-theme="seafoam"] .text-white,
+html[data-theme="paper"] .text-white,
+html[data-theme="dune"] .text-white {
+  color: var(--brand-ink);
+}
+
+html[data-theme="mariadb"] .ring-white\/10,
+html[data-theme="seafoam"] .ring-white\/10,
+html[data-theme="paper"] .ring-white\/10,
+html[data-theme="dune"] .ring-white\/10 {
+  --tw-ring-color: rgb(0 0 0 / 0.1);
+}
+
+/* Theme-aware page ground (body background). Defaults to the neutral 950
+   step; light themes may override with an exact brand colour — mariadb.org
+   uses a barely-warm ivory (#F7F8F0) that no cool neutral step reproduces. */
+html[data-theme] {
+  --page-bg: var(--color-slate-950);
+}
+
+body {
+  background-color: var(--page-bg);
+}
+
+/* Utility consumed by the header wordmark. */
+.text-brand {
+  color: var(--brand-ink);
+}
+
+.taf-logo {
+  filter: none;
 }
 
 /* ###########################################################################

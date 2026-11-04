@@ -44,12 +44,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" data-theme="midnight" suppressHydrationWarning>
+    <html lang="en" data-theme="mariadb" suppressHydrationWarning>
       <head>
         <script
           dangerouslySetInnerHTML={{
             __html:
-              '(function(){try{var t=localStorage.getItem("taf-theme");if(t){try{t=JSON.parse(t).state.themeId;}catch(e){} } if(!t) t="midnight"; document.documentElement.setAttribute("data-theme", t);}catch(e){document.documentElement.setAttribute("data-theme","midnight");}})();',
+              '(function(){try{var t=localStorage.getItem("taf-theme");if(t){try{t=JSON.parse(t).state.themeId;}catch(e){} } if(!t) t="mariadb"; document.documentElement.setAttribute("data-theme", t);}catch(e){document.documentElement.setAttribute("data-theme","mariadb");}})();',
           }}
         />
       </head>

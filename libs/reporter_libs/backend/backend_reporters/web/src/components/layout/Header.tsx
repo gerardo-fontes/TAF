@@ -23,6 +23,7 @@
 
 'use client';
 
+import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { ThemeSwitcher } from '@/components/theme/ThemeSwitcher';
@@ -41,12 +42,23 @@ export function Header() {
         {/* Brand / Logo */}
         <div className="flex items-center gap-6">
           <Link href="/" className="flex items-center gap-3 group">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-blue-600 to-indigo-600 font-black text-white text-base shadow-lg shadow-blue-500/20 group-hover:scale-105 transition-transform">
-              M
-            </div>
+            {/* MariaDB Foundation logo — recolored copy of the official
+                mariadb.org asset (public/icons/...svg): brand slate-blue ink
+                (#355872) for the lettering/seal plus the original periwinkle
+                & rust sea-lion marks (#6183E0/#D1876C), so the true logo
+                colours show on light themes; dark themes get a lightness-only
+                invert via CSS (see globals.css .taf-logo rules). */}
+            <Image
+              src="/icons/mariaDBFoundation_light_transparent.svg"
+              alt="MariaDB Foundation logo"
+              width={80}
+              height={30}
+              className="taf-logo h-14 w-auto shrink-0 group-hover:scale-105 transition-transform"
+              priority
+            />
             <div>
               <div className="flex items-center gap-2">
-                <span className="font-bold tracking-tight text-white text-base group-hover:text-blue-400 transition-colors">
+                <span className="font-bold tracking-tight text-brand text-base group-hover:text-blue-400 transition-colors">
                   TAF
                 </span>
                 <span className="rounded bg-blue-950/80 px-1.5 py-0.5 text-[10px] font-semibold text-blue-400 border border-blue-800/60">
@@ -67,11 +79,10 @@ export function Header() {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
-                    active
-                      ? 'bg-blue-950/60 text-blue-300 border border-blue-800/60 shadow-sm'
-                      : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
-                  }`}
+                  className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${active
+                    ? 'bg-blue-950/60 text-blue-300 border border-blue-800/60 shadow-sm'
+                    : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
+                    }`}
                 >
                   {item.label}
                 </Link>

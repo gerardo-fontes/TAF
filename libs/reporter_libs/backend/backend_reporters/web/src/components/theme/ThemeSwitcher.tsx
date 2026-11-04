@@ -16,7 +16,8 @@
  * # See https://www.gnu.org/licenses/ for details.
 * #
 * # PURPOSE:
- * # Dropdown control letting users pick one of the 5 selectable frontend themes.
+ * # Dropdown control letting users pick one of the selectable frontend themes
+ * # (5 dark + 4 light, MariaDB Foundation being the default).
  * #############################################################################
  */
 

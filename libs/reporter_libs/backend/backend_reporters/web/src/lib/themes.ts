@@ -32,9 +32,33 @@ export interface ThemeDefinition {
 
 export const THEMES: ThemeDefinition[] = [
   {
+    id: 'mariadb',
+    name: 'MariaDB Foundation',
+    description: 'Official mariadb.org palette — cool blue-grey surfaces on the site\'s ivory ground, with slate-blue ink and rust accents. The default TAF look.',
+    swatches: ['#f7f8f0', '#dce4ea', '#355872'],
+  },
+  {
+    id: 'seafoam',
+    name: 'Seafoam Sky',
+    description: 'Cool pale blue-grey surfaces with vivid sky-blue accents.',
+    swatches: ['#f2f7f9', '#ddebf1', '#0ea5e9'],
+  },
+  {
+    id: 'paper',
+    name: 'Paper Indigo',
+    description: 'Crisp neutral paper whites keeping the classic indigo accent family.',
+    swatches: ['#f8fafc', '#e2e8f0', '#4f46e5'],
+  },
+  {
+    id: 'dune',
+    name: 'Dune Sand',
+    description: 'Warm sand tones with burnt-orange accents.',
+    swatches: ['#fbf7ef', '#eee3cf', '#ea580c'],
+  },
+  {
     id: 'midnight',
     name: 'Midnight Indigo',
-    description: 'Deep slate surfaces with indigo accents. The default TAF look.',
+    description: 'Deep slate surfaces with indigo accents.',
     swatches: ['#020617', '#0f172a', '#4f46e5'],
   },
   {
@@ -63,7 +87,7 @@ export const THEMES: ThemeDefinition[] = [
   },
 ];
 
-export const DEFAULT_THEME_ID = 'midnight';
+export const DEFAULT_THEME_ID = 'mariadb';
 
 export function getTheme(id: string): ThemeDefinition {
   return THEMES.find((t) => t.id === id) ?? THEMES[0];
