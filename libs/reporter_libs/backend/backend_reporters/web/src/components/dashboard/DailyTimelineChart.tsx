@@ -75,87 +75,89 @@ export function DailyTimelineChart({ timeline }: DailyTimelineChartProps) {
         </div>
       </div>
 
-      {/* Stacked Bar Visual Chart */}
+      {/* Stacked Bar Visual Chart (horizontally scrollable when days overflow) */}
       <div className="relative pt-4 pb-2">
-        <div className="flex items-end justify-between gap-2 h-44 border-b border-slate-800 px-2">
-          {timeline.map((point) => {
-            const heightPct = (point.totalRuns / maxDailyRuns) * 100;
-            const totalComp = point.comparisonCount > 0 ? point.comparisonCount : 1;
-            const regressedPct = (point.regressedCount / totalComp) * 100;
-            const warnPct = (point.warningCount / totalComp) * 100;
-            const gainPct = (point.gainCount / totalComp) * 100;
-            const parPct = (point.parCount / totalComp) * 100;
+        <div className="overflow-x-auto overflow-y-hidden timeline-scrollbar pb-2">
+          <div
+            className="flex items-end justify-between gap-2 h-44 border-b border-slate-800 px-2 w-max min-w-full"
+          >
+            {timeline.map((point) => {
+              const heightPct = (point.totalRuns / maxDailyRuns) * 100;
+              const totalComp = point.comparisonCount > 0 ? point.comparisonCount : 1;
+              const regressedPct = (point.regressedCount / totalComp) * 100;
+              const warnPct = (point.warningCount / totalComp) * 100;
+              const gainPct = (point.gainCount / totalComp) * 100;
+              const parPct = (point.parCount / totalComp) * 100;
 
-            const isHovered = hoveredPoint?.date === point.date;
+              const isHovered = hoveredPoint?.date === point.date;
 
-            return (
-              <div
-                key={point.date}
-                className="flex flex-col items-center flex-1 max-w-[60px] h-full justify-end group cursor-pointer"
-                onMouseEnter={() => setHoveredPoint(point)}
-                onMouseLeave={() => setHoveredPoint(null)}
-              >
-                {/* Total count badge above bar */}
-                <span
-                  className={`text-[10px] font-mono mb-1 transition-all ${
-                    isHovered ? 'text-white font-bold scale-110' : 'text-slate-500'
-                  }`}
-                >
-                  {point.totalRuns}
-                </span>
-
-                {/* Stacked bar container */}
+              return (
                 <div
-                  className={`w-full rounded-t-md overflow-hidden flex flex-col justify-end transition-all ${
-                    isHovered ? 'ring-2 ring-blue-500 ring-offset-1 ring-offset-slate-900' : ''
-                  }`}
-                  style={{ height: `${Math.max(8, heightPct)}%` }}
+                  key={point.date}
+                  className="flex flex-col items-center shrink-0 w-12 max-w-[60px] h-full justify-end group cursor-pointer"
+                  onMouseEnter={() => setHoveredPoint(point)}
+                  onMouseLeave={() => setHoveredPoint(null)}
                 >
-                  {/* Regressed segment */}
-                  {point.regressedCount > 0 && (
-                    <div
-                      className="bg-rose-500 hover:bg-rose-400 transition-colors"
-                      style={{ height: `${regressedPct}%` }}
-                      title={`Regressed: ${point.regressedCount}`}
-                    />
-                  )}
-                  {/* Warning segment */}
-                  {point.warningCount > 0 && (
-                    <div
-                      className="bg-amber-500 hover:bg-amber-400 transition-colors"
-                      style={{ height: `${warnPct}%` }}
-                      title={`Warning: ${point.warningCount}`}
-                    />
-                  )}
-                  {/* Parity segment */}
-                  {point.parCount > 0 && (
-                    <div
-                      className="bg-slate-600 hover:bg-slate-500 transition-colors"
-                      style={{ height: `${parPct}%` }}
-                      title={`Parity: ${point.parCount}`}
-                    />
-                  )}
-                  {/* Gain segment */}
-                  {point.gainCount > 0 && (
-                    <div
-                      className="bg-emerald-500 hover:bg-emerald-400 transition-colors"
-                      style={{ height: `${gainPct}%` }}
-                      title={`Gain: ${point.gainCount}`}
-                    />
-                  )}
-                  {/* Uncompared runs filler if no comparisons */}
-                  {point.comparisonCount === 0 && (
-                    <div className="bg-slate-800 h-full w-full" title="Runs without comparisons" />
-                  )}
-                </div>
+                  {/* Total count badge above bar */}
+                  <span
+                    className={`text-[10px] font-mono mb-1 transition-all ${isHovered ? 'text-white font-bold scale-110' : 'text-slate-500'
+                      }`}
+                  >
+                    {point.totalRuns}
+                  </span>
 
-                {/* Date label */}
-                <span className="text-[10px] font-mono text-slate-400 mt-2 truncate w-full text-center">
-                  {point.date.slice(5)}
-                </span>
-              </div>
-            );
-          })}
+                  {/* Stacked bar container */}
+                  <div
+                    className={`w-full rounded-t-md overflow-hidden flex flex-col justify-end transition-all ${isHovered ? 'ring-2 ring-blue-500 ring-offset-1 ring-offset-slate-900' : ''
+                      }`}
+                    style={{ height: `${Math.max(8, heightPct)}%` }}
+                  >
+                    {/* Regressed segment */}
+                    {point.regressedCount > 0 && (
+                      <div
+                        className="bg-rose-500 hover:bg-rose-400 transition-colors"
+                        style={{ height: `${regressedPct}%` }}
+                        title={`Regressed: ${point.regressedCount}`}
+                      />
+                    )}
+                    {/* Warning segment */}
+                    {point.warningCount > 0 && (
+                      <div
+                        className="bg-amber-500 hover:bg-amber-400 transition-colors"
+                        style={{ height: `${warnPct}%` }}
+                        title={`Warning: ${point.warningCount}`}
+                      />
+                    )}
+                    {/* Parity segment */}
+                    {point.parCount > 0 && (
+                      <div
+                        className="bg-slate-600 hover:bg-slate-500 transition-colors"
+                        style={{ height: `${parPct}%` }}
+                        title={`Parity: ${point.parCount}`}
+                      />
+                    )}
+                    {/* Gain segment */}
+                    {point.gainCount > 0 && (
+                      <div
+                        className="bg-emerald-500 hover:bg-emerald-400 transition-colors"
+                        style={{ height: `${gainPct}%` }}
+                        title={`Gain: ${point.gainCount}`}
+                      />
+                    )}
+                    {/* Uncompared runs filler if no comparisons */}
+                    {point.comparisonCount === 0 && (
+                      <div className="bg-slate-800 h-full w-full" title="Runs without comparisons" />
+                    )}
+                  </div>
+
+                  {/* Date label */}
+                  <span className="text-[10px] font-mono text-slate-400 mt-2 truncate w-full text-center">
+                    {point.date.slice(5)}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
         </div>
 
         {/* Hover Callout Card */}

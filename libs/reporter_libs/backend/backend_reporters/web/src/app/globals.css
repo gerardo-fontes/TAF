@@ -71,7 +71,7 @@ html[data-theme="violet"] {
 
 /* Map Tailwind colour tokens to the theme parameters above. */
 html[data-theme] {
-  --color-slate-50:  hsl(var(--n-h) var(--n-s) 98%);
+  --color-slate-50: hsl(var(--n-h) var(--n-s) 98%);
   --color-slate-100: hsl(var(--n-h) var(--n-s) 96%);
   --color-slate-200: hsl(var(--n-h) var(--n-s) 90%);
   --color-slate-300: hsl(var(--n-h) var(--n-s) 84%);
@@ -83,7 +83,7 @@ html[data-theme] {
   --color-slate-900: hsl(var(--n-h) var(--n-s) 10%);
   --color-slate-950: hsl(var(--n-h) var(--n-s) 4%);
 
-  --color-gray-50:  hsl(var(--n-h) var(--n-s) 98%);
+  --color-gray-50: hsl(var(--n-h) var(--n-s) 98%);
   --color-gray-100: hsl(var(--n-h) var(--n-s) 96%);
   --color-gray-200: hsl(var(--n-h) var(--n-s) 90%);
   --color-gray-300: hsl(var(--n-h) var(--n-s) 84%);
@@ -109,4 +109,34 @@ html[data-theme] {
   --color-indigo-700: hsl(calc(var(--a-h) + 24) var(--a-s) 44%);
   --color-indigo-900: hsl(calc(var(--a-h) + 24) var(--a-s) 26%);
   --color-indigo-950: hsl(calc(var(--a-h) + 24) var(--a-s) 14%);
+}
+
+/* ###########################################################################
+ * Custom scrollbars: slim, theme-aware horizontal scrollbar used by the
+ * Daily Activity & Status Timeline chart so overflowing day bars can be
+ * scrolled manually instead of spilling into neighbouring panels.
+ * ########################################################################### */
+
+.timeline-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: hsl(var(--n-h) var(--n-s) 30%) transparent;
+}
+
+.timeline-scrollbar::-webkit-scrollbar {
+  height: 8px;
+}
+
+.timeline-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.timeline-scrollbar::-webkit-scrollbar-thumb {
+  background-color: hsl(var(--n-h) var(--n-s) 30%);
+  border-radius: 9999px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+.timeline-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: hsl(var(--n-h) var(--n-s) 40%);
 }
