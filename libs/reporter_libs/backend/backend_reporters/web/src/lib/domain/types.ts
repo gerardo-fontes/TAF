@@ -178,9 +178,59 @@ export interface DashboardFeedItem {
   baselineTimestamp: string;
 }
 
+export interface DashboardDailyTimelinePoint {
+  date: string;
+  totalRuns: number;
+  comparisonCount: number;
+  regressedCount: number;
+  warningCount: number;
+  parCount: number;
+  gainCount: number;
+}
+
+export interface DashboardSuiteHealth {
+  suiteName: string;
+  runCount: number;
+  comparisonCount: number;
+  regressedCount: number;
+  warningCount: number;
+  gainCount: number;
+  medianChangePct: number;
+}
+
+export interface DashboardSystemInventoryItem {
+  systemId: string;
+  hostName: string;
+  cpuModel: string;
+  architecture: string;
+  totalRamGb: number;
+  runCount: number;
+}
+
+export interface DashboardBaselineCoverage {
+  totalRuns: number;
+  baselineRunsCount: number;
+  candidateWithBaselineCount: number;
+  candidateWithoutBaselineCount: number;
+  coveragePct: number;
+}
+
+export interface DashboardFilters {
+  days?: number;
+  suite?: string;
+  host?: string;
+  metric?: string;
+  dbVersion?: string;
+  workloadHash?: string;
+  tag?: string;
+  severity?: string;
+  cursor?: string | null;
+  limit?: number;
+}
+
 export interface DashboardData {
   timeWindowDays: number;
-  filters: Record<string, unknown>;
+  filters: DashboardFilters;
   rollups: DashboardRollup[];
   feed: DashboardFeedItem[];
   feedCursor: string | null;
@@ -188,6 +238,10 @@ export interface DashboardData {
   totalComparisons: number;
   multiHostWarning: boolean;
   distinctHostsCount: number;
+  dailyTimeline: DashboardDailyTimelinePoint[];
+  suiteHealth: DashboardSuiteHealth[];
+  systemInventory: DashboardSystemInventoryItem[];
+  baselineCoverage: DashboardBaselineCoverage;
 }
 
 export interface SystemFacet {

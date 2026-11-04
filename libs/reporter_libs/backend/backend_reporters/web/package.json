@@ -11,6 +11,7 @@
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
     "db:reset": "node scripts/seed-dev-db.mjs",
+    "db:seed-history": "node scripts/seed-historical-data.mjs",
     "db:explain": "node scripts/explain-queries.mjs"
   },
   "keywords": [],

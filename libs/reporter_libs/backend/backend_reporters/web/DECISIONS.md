@@ -133,3 +133,14 @@ This document records the foundational decisions agreed upon with the TAF mainta
 - **Rationale:**
   TAF's Perl reporter `chart_and_tables_html.pm` generates static HTML embedding Chart.js from a CDN (`<script src="https://cdn.jsdelivr.net/npm/chart.js">`). The web frontend does not replace, modify, or deprecate this reporter. Instead, the web frontend complements existing reporters by providing an interactive, accessible dashboard over the database within its own isolated Node.js/Next.js stack. The web frontend uses `d3-scale` and `d3-shape` directly for log₂-scaled doubling thread axes and threshold bands without installing the full D3 bundle or altering any Perl files.
 
+---
+
+## 10. Dashboard Aggregation Architecture & Leading Timestamp Index Proposal
+
+- **Decision:** The dashboard executes single-round-trip parallelized aggregation queries over `test_run` and `test_run_comparison`, with an upstream proposal to add a leading index on `test_run.test_timestamp`.
+- **Date:** October 2026
+- **Rationale:**
+  The automated results dashboard filters runs by time windows (`r.test_timestamp >= NOW() - INTERVAL ? DAY`). In `create_backend.sql`, the existing index covering timestamps on `test_run` is `uq_test_identity (system_id, config_id, suite_name, test_name, test_timestamp)`. Because `test_timestamp` is the 5th column in a compound key, range filtering on timestamp alone cannot take advantage of leading-column B-tree index pruning.
+  - Rather than making unapproved DDL changes to the database schema in a frontend pull request, we propose `KEY idx_test_run_timestamp (test_timestamp)` as an upstream performance optimization for high-scale installations (>100,000 runs).
+
+
