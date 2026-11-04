@@ -25,19 +25,29 @@
  * # See https://www.gnu.org/licenses/ for details.
  * #
  * # PURPOSE:
- * # Seed the taf_backend database with 10 days of historical benchmark results
- * # distributed over the past 30 days, plus a second suite (sysbench-lua) on
- * # 5 of those days, and a second host on 3 days — giving the TAF web dashboard
- * # enough temporal breadth to exercise timeline charts, suite health tables,
- * # multi-host warnings, and regression feed pagination.
+ * # Seed the taf_backend database with historical benchmark results spread over
+ * # a configurable window (default: the last 60 days), with a configurable
+ * # number of candidate tests per day (default: 2), plus a second suite
+ * # (sysbench-lua) every other day and a second host on selected days — giving
+ * # the TAF web dashboard enough temporal breadth to exercise timeline charts,
+ * # suite health tables, multi-host warnings, and regression feed pagination.
  * #
  * # USAGE:
  * #   node scripts/seed-historical-data.mjs [--config=/path/to/backend.conf]
- * #   npm run db:seed-history [-- --config=/path/to/backend.conf]
+ * #                                         [--days=60] [--runs-per-day=2]
+ * #   npm run db:seed-history [-- --config=/path/to/backend.conf --days=60 --runs-per-day=3]
+ * #
+ * # CLI PARAMETERS:
+ * #   --days=N           Number of past days to seed, one entry per consecutive
+ * #                      day from -N up to -1 (default: 60).
+ * #   --runs-per-day=N   Number of candidate hammerdb-tpcc runs inserted per
+ * #                      day alongside that day's baseline (default: 2).
  * #
  * # The script is idempotent at the system/config level (insert_system_identity
  * # and insert_full_db_config are UPSERT-style stored procedures). Each run of
- * # the script appends new test_run + results + comparison rows.
+ * # the script appends new test_run + results + comparison rows; test names and
+ * # timestamps embed the seed date so repeated executions never collide with
+ * # the uq_test_identity unique constraint.
  * #############################################################################
  */
 
@@ -105,6 +115,25 @@ function resolveDbConfig() {
 }
 
 // ---------------------------------------------------------------------------
+// CLI parameters (--days / --runs-per-day)
+// ---------------------------------------------------------------------------
+
+const DEFAULT_DAYS = 60;
+const DEFAULT_RUNS_PER_DAY = 2;
+
+function parsePositiveIntFlag(flagName, defaultValue) {
+  const arg = process.argv.find((a) => a.startsWith(`${flagName}=`));
+  if (!arg) return defaultValue;
+  const raw = arg.slice(flagName.length + 1);
+  const value = parseInt(raw, 10);
+  if (!Number.isFinite(value) || value < 1) {
+    console.error(`[Args] Invalid value for ${flagName}: "${raw}" (expected a positive integer).`);
+    process.exit(2);
+  }
+  return value;
+}
+
+// ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
@@ -117,6 +146,16 @@ function toSqlDatetime(date) {
   const mi = pad(date.getMinutes());
   const s = pad(date.getSeconds());
   return `${y}-${mo}-${d} ${h}:${mi}:${s}`;
+}
+
+/**
+ * Compact seed-date tag (YYMMDD) embedded in every generated test_name so that
+ * repeated executions of this script never collide with the uq_test_identity
+ * unique constraint (system_id, config_id, suite_name, test_name, test_timestamp).
+ */
+function seedDateTag(date) {
+  const pad = (n) => String(n).padStart(2, '0');
+  return `${String(date.getFullYear()).slice(-2)}${pad(date.getMonth() + 1)}${pad(date.getDate())}`;
 }
 
 /**
@@ -329,9 +368,12 @@ async function seedRunResults(conn, runId, { threads, iterations, factor, baseTp
 // Main
 // ---------------------------------------------------------------------------
 async function main() {
+  const numDays = parsePositiveIntFlag('--days', DEFAULT_DAYS);
+  const runsPerDay = parsePositiveIntFlag('--runs-per-day', DEFAULT_RUNS_PER_DAY);
+
   console.log('======================================================================');
   console.log('TAF Historical Benchmark Seeder (seed-historical-data.mjs)');
-  console.log('Populating 30-day history via stored procedures...');
+  console.log(`Populating ${numDays}-day history with ${runsPerDay} candidate run(s)/day via stored procedures...`);
   console.log('======================================================================');
 
   const dbConfig = resolveDbConfig();
@@ -412,24 +454,26 @@ async function main() {
     }
 
     // -----------------------------------------------------------------------
-    // Step 3: Build the 10-day schedule
+    // Step 3: Build the N-day schedule
     //
-    // Days chosen: evenly spaced every 3 days from -30 to 0.
-    //   [-30, -27, -24, -21, -18, -15, -12, -9, -6, -3]
+    // Days chosen: every consecutive day from -numDays up to -1 (oldest first),
+    //   e.g. for --days=60 → [60, 59, 58, ..., 2, 1]
     //
     // Per day plan:
     //   - 1 baseline run (is_baseline=true) on the EPYC host (hammerdb-tpcc)
-    //   - 2–3 candidate runs with mixed statuses (hammerdb-tpcc, EPYC)
-    //   - Sysbench-lua on days [0,2,4,6,8] (every other day, 5 days total)
-    //   - Xeon host runs on days [0,3,7]  (3 days → triggers multi-host warning)
+    //   - `--runs-per-day` candidate runs with mixed statuses (hammerdb-tpcc, EPYC)
+    //   - Sysbench-lua every other day (indices 0,2,4,...)
+    //   - Xeon host runs every 20th day (indices 0,20,40,... → multi-host warning)
     // -----------------------------------------------------------------------
-    console.log('\n[3/5] Inserting 10 days of historical Test Runs...');
+    console.log(`\n[3/5] Inserting ${numDays} days of historical Test Runs (${runsPerDay} candidates/day)...`);
 
     const now = Date.now();
     const msPerDay = 86400000;
+    const seedTag = seedDateTag(new Date(now));
 
-    // The 10 day-offsets (days ago from now), oldest first
-    const dayOffsets = [30, 27, 24, 21, 18, 15, 12, 9, 6, 3];
+    // The day-offsets (days ago from now), oldest first: numDays .. 1
+    const dayOffsets = [];
+    for (let d = numDays; d >= 1; d--) dayOffsets.push(d);
 
     // Per-day candidate status sequence: cycles through PAR, GAIN, WARNING, REGRESSED, PAR+, PAR-
     const statusCycle = [
@@ -441,10 +485,10 @@ async function main() {
       { label: 'PAR_MINUS', factor: 0.985, pctChange: -1.5 },
     ];
 
-    // Sysbench appears on day indices 0,2,4,6,8 (every other day starting from oldest)
-    const sysbenchDayIndices = new Set([0, 2, 4, 6, 8]);
-    // Xeon host appears on day indices 0, 3, 7
-    const xeonDayIndices = new Set([0, 3, 7]);
+    // Sysbench appears every other day (even day indices)
+    const isSysbenchDay = (dayIdx) => dayIdx % 2 === 0;
+    // Xeon host appears every 20th day (indices 0, 20, 40, ...)
+    const isXeonDay = (dayIdx) => dayIdx % 20 === 0;
 
     // Workload hashes (must be stable so do_compare picks the right baseline)
     // Using a constant string rather than crypto so the hash is fully deterministic.
@@ -465,17 +509,13 @@ async function main() {
       const dayLabel = `Day -${daysAgo}`;
       console.log(`\n  --- ${dayLabel} (day index ${dayIdx}) ---`);
 
-      // Pick the status for this day's candidate (cycles through statusCycle by dayIdx)
-      const statusA = statusCycle[dayIdx % statusCycle.length];
-      const statusB = statusCycle[(dayIdx + 2) % statusCycle.length];
-
       // ---- hammerdb-tpcc baseline on EPYC ----
       const baselineStartTs = new Date(now - daysAgo * msPerDay + 2 * 3600000);
       const baselineEndTs   = new Date(now - daysAgo * msPerDay + 4 * 3600000);
       const baselineVersion = `11.4.${dayIdx}-MariaDB-LTS`;
 
       const baselineRunDef = {
-        test_name: `hammerdb_tpcc_baseline_lts_day${dayIdx}`,
+        test_name: `hammerdb_tpcc_baseline_lts_day${dayIdx}_${seedTag}`,
         system_id: systemIds['epyc01'],
         taf_harness_name: 'taf-runner', taf_harness_ver: '2.1.0',
         suite_name: 'hammerdb-tpcc', suite_version: '4.9',
@@ -529,14 +569,17 @@ async function main() {
       });
       totalResults += baselineResultCount;
 
-      // ---- Candidate A (hammerdb-tpcc, EPYC, statusA) ----
-      {
-        const candStartTs = new Date(now - daysAgo * msPerDay + 5 * 3600000);
-        const candEndTs   = new Date(now - daysAgo * msPerDay + 7 * 3600000);
+      // ---- Candidate runs (hammerdb-tpcc, EPYC) — --runs-per-day of them ----
+      for (let r = 0; r < runsPerDay; r++) {
+        const status = statusCycle[(dayIdx + r * 2) % statusCycle.length];
+        const slotLetter = String.fromCharCode(97 + r); // 'a', 'b', 'c', ...
+        // Stagger each candidate 3 hours after the previous one (baseline occupies +2..+4h)
+        const candStartTs = new Date(now - daysAgo * msPerDay + (5 + r * 3) * 3600000);
+        const candEndTs   = new Date(now - daysAgo * msPerDay + (7 + r * 3) * 3600000);
         const candVersion = `11.8.${dayIdx}-MariaDB`;
 
         const candRunDef = {
-          test_name: `hammerdb_tpcc_candidate_${statusA.label.toLowerCase()}_day${dayIdx}_a`,
+          test_name: `hammerdb_tpcc_candidate_${status.label.toLowerCase()}_day${dayIdx}_${slotLetter}_${seedTag}`,
           system_id: systemIds['epyc01'],
           taf_harness_name: 'taf-runner', taf_harness_ver: '2.1.0',
           suite_name: 'hammerdb-tpcc', suite_version: '4.9',
@@ -548,8 +591,8 @@ async function main() {
           db_port: 3306, db_socket: '/tmp/mariadb118.sock',
           database_under_test: 'tpcc_1000w',
           config_id: configIds['oltp'],
-          test_case_tag: `HIST_CAND_${statusA.label}_D${dayIdx}A`,
-          autogen_tags: JSON.stringify({ workload: 'tpcc', scale: 1000, branch: '11.8', day_idx: dayIdx, slot: 'A' }),
+          test_case_tag: `HIST_CAND_${status.label}_D${dayIdx}${slotLetter.toUpperCase()}`,
+          autogen_tags: JSON.stringify({ workload: 'tpcc', scale: 1000, branch: '11.8', day_idx: dayIdx, slot: slotLetter.toUpperCase() }),
           test_run_properties: 'test_tpcc_11_8_candidate.properties',
           test_run_properties_contents: 'taf.test_suite=hammerdb-tpcc\ntaf.threads=4,8,16,32,64,128\ntaf.duration=60',
           db_config_origin: 'file',
@@ -558,7 +601,7 @@ async function main() {
           is_baseline: false,
           pct_warning: 3, pct_fail: 5, pct_gain: 5, pct_duration_drift: 10,
           test_type: 'automated-benchmark',
-          comments: `Candidate A — expected ${statusA.label} (${statusA.pctChange > 0 ? '+' : ''}${statusA.pctChange.toFixed(1)}%) — day ${dayIdx}`,
+          comments: `Candidate ${slotLetter.toUpperCase()} — expected ${status.label} (${status.pctChange > 0 ? '+' : ''}${status.pctChange.toFixed(1)}%) — day ${dayIdx}`,
           test_timestamp: toSqlDatetime(candStartTs),
           test_end_time: toSqlDatetime(candEndTs),
           test_duration: 7200,
@@ -567,7 +610,7 @@ async function main() {
           number_of_rows: 100000000, number_of_tables: 9, range_size: 1000,
           connector: 'MariaDB-Connector-C',
           thread_list: '4,8,16,32,64,128',
-          metadata: JSON.stringify({ generator: 'TAF-Perl', run_mode: 'nightly', day_idx: dayIdx, slot: 'A' }),
+          metadata: JSON.stringify({ generator: 'TAF-Perl', run_mode: 'nightly', day_idx: dayIdx, slot: slotLetter.toUpperCase() }),
         };
 
         const candRunId = await insertTestRun(conn, candRunDef);
@@ -577,79 +620,20 @@ async function main() {
         const cResults = await seedRunResults(conn, candRunId, {
           threads: [4, 8, 16, 32, 64, 128],
           iterations: 2,
-          factor: statusA.factor,
+          factor: status.factor,
           baseTpmC: 4800,
           suite: 'hammerdb-tpcc',
         });
         totalResults += cResults;
 
-        // Compare against the baseline just inserted above
+        // Compare against the baseline inserted above for this day
         await conn.query(`CALL do_compare(?, ?, @cmp_id);`, [baselineRunId, candRunId]);
         totalComparisons++;
-        console.log(`    ✓ Candidate A (tpcc/epyc): runId=${candRunId} [${statusA.label}] vs baseline #${baselineRunId}`);
-      }
-
-      // ---- Candidate B (hammerdb-tpcc, EPYC, statusB) ----
-      {
-        const candStartTs = new Date(now - daysAgo * msPerDay + 8 * 3600000);
-        const candEndTs   = new Date(now - daysAgo * msPerDay + 10 * 3600000);
-        const candVersion = `11.8.${dayIdx}-MariaDB`;
-
-        const candRunDef = {
-          test_name: `hammerdb_tpcc_candidate_${statusB.label.toLowerCase()}_day${dayIdx}_b`,
-          system_id: systemIds['epyc01'],
-          taf_harness_name: 'taf-runner', taf_harness_ver: '2.1.0',
-          suite_name: 'hammerdb-tpcc', suite_version: '4.9',
-          client_program: 'hammerdbcli', client_version: '4.9-linux-x64',
-          db_maker: 'MariaDB', db_engine: 'InnoDB',
-          db_version: candVersion,
-          db_user: 'taf_user', db_root_user: 'root',
-          db_install_dir: '/opt/mariadb/11.8',
-          db_port: 3306, db_socket: '/tmp/mariadb118.sock',
-          database_under_test: 'tpcc_1000w',
-          config_id: configIds['oltp'],
-          test_case_tag: `HIST_CAND_${statusB.label}_D${dayIdx}B`,
-          autogen_tags: JSON.stringify({ workload: 'tpcc', scale: 1000, branch: '11.8', day_idx: dayIdx, slot: 'B' }),
-          test_run_properties: 'test_tpcc_11_8_candidate.properties',
-          test_run_properties_contents: 'taf.test_suite=hammerdb-tpcc\ntaf.threads=4,8,16,32,64,128\ntaf.duration=60',
-          db_config_origin: 'file',
-          db_config_source_file: '/etc/mysql/mariadb.conf.d/50-server.cnf',
-          db_config_tmp_file: '/tmp/backend_db.cnf',
-          is_baseline: false,
-          pct_warning: 3, pct_fail: 5, pct_gain: 5, pct_duration_drift: 10,
-          test_type: 'automated-benchmark',
-          comments: `Candidate B — expected ${statusB.label} (${statusB.pctChange > 0 ? '+' : ''}${statusB.pctChange.toFixed(1)}%) — day ${dayIdx}`,
-          test_timestamp: toSqlDatetime(candStartTs),
-          test_end_time: toSqlDatetime(candEndTs),
-          test_duration: 7200,
-          warmup_threads: 32, warmup_duration: 300,
-          test_suite_revision: 4, test_suite_pm_file: 'hammerdb-tpcc.pm',
-          number_of_rows: 100000000, number_of_tables: 9, range_size: 1000,
-          connector: 'MariaDB-Connector-C',
-          thread_list: '4,8,16,32,64,128',
-          metadata: JSON.stringify({ generator: 'TAF-Perl', run_mode: 'nightly', day_idx: dayIdx, slot: 'B' }),
-        };
-
-        const candRunId = await insertTestRun(conn, candRunDef);
-        await conn.query(`CALL update_workload_hash(?, ?);`, [candRunId, WH_TPCC_EPYC]);
-        totalRuns++;
-
-        const cResults = await seedRunResults(conn, candRunId, {
-          threads: [4, 8, 16, 32, 64, 128],
-          iterations: 2,
-          factor: statusB.factor,
-          baseTpmC: 4800,
-          suite: 'hammerdb-tpcc',
-        });
-        totalResults += cResults;
-
-        await conn.query(`CALL do_compare(?, ?, @cmp_id);`, [baselineRunId, candRunId]);
-        totalComparisons++;
-        console.log(`    ✓ Candidate B (tpcc/epyc): runId=${candRunId} [${statusB.label}] vs baseline #${baselineRunId}`);
+        console.log(`    ✓ Candidate ${slotLetter.toUpperCase()} (tpcc/epyc): runId=${candRunId} [${status.label}] vs baseline #${baselineRunId}`);
       }
 
       // ---- Sysbench-lua on every other day ----
-      if (sysbenchDayIndices.has(dayIdx)) {
+      if (isSysbenchDay(dayIdx)) {
         const sbStatus = statusCycle[(dayIdx + 1) % statusCycle.length];
         const sbStartTs = new Date(now - daysAgo * msPerDay + 11 * 3600000);
         const sbEndTs   = new Date(now - daysAgo * msPerDay + 12 * 3600000);
@@ -661,7 +645,7 @@ async function main() {
         if (isFirstSysbench) {
           // Insert a sysbench baseline first
           const sbBaselineDef = {
-            test_name: `sysbench_lua_point_select_baseline_day${dayIdx}`,
+            test_name: `sysbench_lua_point_select_baseline_day${dayIdx}_${seedTag}`,
             system_id: systemIds['epyc01'],
             taf_harness_name: 'taf-runner', taf_harness_ver: '2.1.0',
             suite_name: 'sysbench-lua', suite_version: '1.0.20',
@@ -718,7 +702,7 @@ async function main() {
         const sbCandEndTs   = new Date(now - daysAgo * msPerDay + 13 * 3600000);
 
         const sbCandDef = {
-          test_name: `sysbench_lua_point_select_candidate_day${dayIdx}`,
+          test_name: `sysbench_lua_point_select_candidate_day${dayIdx}_${seedTag}`,
           system_id: systemIds['epyc01'],
           taf_harness_name: 'taf-runner', taf_harness_ver: '2.1.0',
           suite_name: 'sysbench-lua', suite_version: '1.0.20',
@@ -769,7 +753,7 @@ async function main() {
       }
 
       // ---- Xeon host run on selected days (triggers multi-host warning) ----
-      if (xeonDayIndices.has(dayIdx)) {
+      if (isXeonDay(dayIdx)) {
         const xStatus = statusCycle[(dayIdx + 4) % statusCycle.length];
         const xStartTs = new Date(now - daysAgo * msPerDay + 14 * 3600000);
         const xEndTs   = new Date(now - daysAgo * msPerDay + 16 * 3600000);
@@ -778,7 +762,7 @@ async function main() {
 
         // Xeon baseline (each Xeon day gets its own baseline — different host = different workload_hash)
         const xBaselineDef = {
-          test_name: `hammerdb_tpcc_xeon02_baseline_day${dayIdx}`,
+          test_name: `hammerdb_tpcc_xeon02_baseline_day${dayIdx}_${seedTag}`,
           system_id: systemIds['xeon02'],
           taf_harness_name: 'taf-runner', taf_harness_ver: '2.1.0',
           suite_name: 'hammerdb-tpcc', suite_version: '4.9',
@@ -834,7 +818,7 @@ async function main() {
         const xCandEndTs   = new Date(now - daysAgo * msPerDay + 19 * 3600000);
 
         const xCandDef = {
-          test_name: `hammerdb_tpcc_xeon02_candidate_day${dayIdx}`,
+          test_name: `hammerdb_tpcc_xeon02_candidate_day${dayIdx}_${seedTag}`,
           system_id: systemIds['xeon02'],
           taf_harness_name: 'taf-runner', taf_harness_ver: '2.1.0',
           suite_name: 'hammerdb-tpcc', suite_version: '4.9',
@@ -905,11 +889,13 @@ async function main() {
 
     console.log('\n[5/5] Done.');
     console.log('\n======================================================================');
-    console.log('✓ Historical seeding complete! Dashboard has 30 days of test data.');
-    console.log('  Suites:  hammerdb-tpcc  (10 days × 3 runs)');
-    console.log('           sysbench-lua   (5 days × 2 runs)');
-    console.log('  Hosts:   db-benchmark-epyc01  (10 days)');
-    console.log('           db-benchmark-xeon02  (3 days — triggers multi-host warning)');
+    console.log(`✓ Historical seeding complete! Dashboard has ${numDays} days of test data.`);
+    console.log(`  Suites:  hammerdb-tpcc  (${numDays} days × ${1 + runsPerDay} runs)`);
+    const sysbenchDays = dayOffsets.filter((_, i) => isSysbenchDay(i)).length;
+    const xeonDays = dayOffsets.filter((_, i) => isXeonDay(i)).length;
+    console.log(`           sysbench-lua   (${sysbenchDays} days × 2 runs)`);
+    console.log(`  Hosts:   db-benchmark-epyc01  (${numDays} days)`);
+    console.log(`           db-benchmark-xeon02  (${xeonDays} days — triggers multi-host warning)`);
     console.log('  Statuses mix: PAR, GAIN, WARNING, REGRESSED, PAR+, PAR-');
     console.log('======================================================================\n');
 
