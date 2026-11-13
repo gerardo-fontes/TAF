@@ -247,7 +247,7 @@ export function DashboardResultsTable({
     }`;
 
   return (
-    <div className="rounded-xl border border-slate-800 bg-slate-900/50 backdrop-blur overflow-hidden">
+    <div className="rounded-xl border border-slate-800 bg-slate-900 overflow-hidden">
       <div className="flex flex-wrap items-center justify-between gap-3 p-4 border-b border-slate-800/80">
         <div>
           <h3 className="text-base font-bold text-white tracking-tight">Results Matrix</h3>
@@ -399,14 +399,14 @@ function ResultCell({ item, entry, href, onOpenTriage, stacked }: ResultCellProp
       <Link
         href={href}
         title="Open Compare view"
-        className="relative z-10 flex items-center gap-1 rounded px-1 font-mono text-xs font-bold hover:underline underline-offset-2"
+        className="relative z-1 flex items-center gap-1 rounded px-1 font-mono text-xs font-bold hover:underline underline-offset-2"
       >
         <span className="text-[9px] opacity-70">{STATUS_GLYPH[item.status] ?? '•'}</span>
         <span>{formatPct(item.maxChangePct)}</span>
       </Link>
 
       {entry && (
-        <span className="pointer-events-none relative z-10 max-w-full truncate font-sans text-[9px] opacity-80">
+        <span className="pointer-events-none relative z-1 max-w-full truncate font-sans text-[9px] opacity-80">
           {entry.workflowStatus}
         </span>
       )}
