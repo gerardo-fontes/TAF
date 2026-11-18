@@ -36,6 +36,9 @@ const nextConfig: NextConfig = {
   // node server.js --config=/path/to/backend.conf
   output: 'standalone',
   reactStrictMode: true,
+  experimental: {
+    agentUpgrade: 'security',
+  },
 };
 
 export default nextConfig;
