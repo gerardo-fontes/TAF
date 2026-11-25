@@ -25,6 +25,7 @@
 
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
+import crypto from 'node:crypto';
 import { getDashboardData } from '@/lib/db/queries/dashboard';
 import { apiSuccess, apiError } from '@/lib/api/envelope';
 
@@ -60,10 +61,18 @@ export async function GET(request: NextRequest) {
     return apiError('INVALID_DASHBOARD_PARAMS', 'Invalid dashboard query parameters', parsed.error.format(), 400);
   }
 
+  const requestId = crypto.randomUUID();
+
   try {
     const data = await getDashboardData(parsed.data);
-    return apiSuccess(data);
+    return apiSuccess(data, { requestId });
   } catch (err: any) {
-    return apiError('DASHBOARD_QUERY_FAILED', 'Failed to retrieve dashboard aggregation', err?.message, 500);
+    console.error(`[dashboard:${requestId}] ${err?.stack || err?.message || err}`);
+    return apiError(
+      'DASHBOARD_QUERY_FAILED',
+      'Failed to retrieve dashboard aggregation',
+      { requestId, message: err?.message },
+      500
+    );
   }
 }

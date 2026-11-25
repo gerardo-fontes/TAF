@@ -21,7 +21,7 @@
  * #############################################################################
  */
 
-import { query } from '../pool';
+import { query, getPool } from '../pool';
 import { parseThreadList } from '../../domain/threads';
 import { decodeCursor, encodeCursor } from '../../api/pagination';
 import type { RunSummary, RunDetail } from '../../domain/types';
@@ -317,4 +317,29 @@ export async function getRunById(id: string): Promise<RunDetail | null> {
         }
       : undefined,
   };
+}
+
+/**
+ * Promotes a test run to baseline status using TAF's stored procedure.
+ * Requires a non-empty comment for auditability.
+ */
+export async function promoteBaseline(runId: string, comment: string): Promise<void> {
+  const trimmed = comment.trim();
+  if (!trimmed) {
+    throw new Error('Baseline comment is required');
+  }
+
+  const pool = getPool();
+  await pool.execute('CALL set_baseline_with_comment(?, ?)', [runId, trimmed]);
+}
+
+/**
+ * Removes baseline status from a test run.
+ */
+export async function demoteBaseline(runId: string): Promise<void> {
+  const pool = getPool();
+  await pool.execute(
+    'UPDATE test_run SET is_baseline = FALSE, baseline_notes = NULL, baseline_set_at = NULL WHERE id = ?',
+    [runId]
+  );
 }

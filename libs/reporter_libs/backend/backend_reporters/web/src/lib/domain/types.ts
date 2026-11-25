@@ -114,6 +114,29 @@ export interface SeriesPoint {
   unit: string;
 }
 
+export interface MetricSummaryRow {
+  metricName: string;
+  metricType: string | null;
+  metricDimension: string | null;
+  metricUnit: string | null;
+  threads: number;
+  count: number;
+  minValue: number;
+  maxValue: number;
+  avgValue: number;
+  stdDev: number;
+}
+
+export interface RawResultRow {
+  iteration: number;
+  threads: number;
+  metricName: string;
+  metricType: string | null;
+  metricDimension: string | null;
+  metricUnit: string | null;
+  value: number;
+}
+
 export interface ComparisonDeltaRow {
   threads: number;
   metricName: string;

@@ -59,6 +59,7 @@ export function DashboardClientView({ initialData, initialFilters }: DashboardCl
   const [isPaused, setIsPaused] = useState<boolean>(false);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(new Date());
   const [isFetching, setIsFetching] = useState<boolean>(false);
+  const [fetchError, setFetchError] = useState<string | null>(null);
 
   // Keyset Pagination State (Milestone 5.3)
   const [feedItems, setFeedItems] = useState<DashboardFeedItem[]>(initialData.feed);
@@ -103,19 +104,34 @@ export function DashboardClientView({ initialData, initialFilters }: DashboardCl
       if (targetFilters.severity) params.set('severity', targetFilters.severity);
       params.set('limit', '50');
 
+      let lastError: unknown = null;
       try {
-        const res = await fetch(`/api/dashboard?${params.toString()}`);
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const json = await res.json();
-        if (json.data) {
-          setData(json.data);
-          setFeedItems(json.data.feed);
-          setFeedCursor(json.data.feedCursor);
-          setHasMoreFeed(json.data.hasMoreFeed);
-          setLastUpdated(new Date());
+      for (let attempt = 0; attempt < 3; attempt++) {
+        try {
+          const res = await fetch(`/api/dashboard?${params.toString()}`);
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          const json = await res.json();
+          if (json.data) {
+            setData(json.data);
+            setFeedItems(json.data.feed);
+            setFeedCursor(json.data.feedCursor);
+            setHasMoreFeed(json.data.hasMoreFeed);
+            setLastUpdated(new Date());
+            setFetchError(null);
+            return;
+          }
+        } catch (err) {
+          lastError = err;
+          if (attempt < 2) {
+            await new Promise((resolve) => setTimeout(resolve, 500 * Math.pow(2, attempt)));
+          }
         }
-      } catch (err) {
-        console.error('Failed to refresh dashboard telemetry:', err);
+      }
+
+      const message = lastError instanceof Error ? lastError.message : String(lastError);
+      console.error('Failed to refresh dashboard telemetry:', lastError);
+      setFetchError(`Dashboard refresh failed: ${message}`);
+      // Keep previous data intact so the UI does not flash or crash.
       } finally {
         if (!silent) setIsFetching(false);
       }
@@ -203,6 +219,11 @@ export function DashboardClientView({ initialData, initialFilters }: DashboardCl
 
   return (
     <div className="space-y-6">
+      {fetchError && (
+        <div className="rounded-lg border border-amber-500/40 bg-amber-500/10 px-4 py-2 text-xs text-amber-200">
+          {fetchError} — showing last successful data.
+        </div>
+      )}
       {/* Dashboard Top Header (Time Window Selector & Polling Controls) */}
       <DashboardHeader
         days={days}

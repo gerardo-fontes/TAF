@@ -129,9 +129,7 @@ export function RunTable({ runs, nextCursor, hasMore }: RunTableProps) {
               <th scope="col" className="py-3.5 px-3 text-right">
                 Results
               </th>
-              <th scope="col" className="py-3.5 pl-3 pr-4 text-center">
-                Action
-              </th>
+              {/* Action column removed per user preference */}
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-800/60 font-sans">
@@ -207,10 +205,22 @@ export function RunTable({ runs, nextCursor, hasMore }: RunTableProps) {
                   {/* Run Name & Tag */}
                   <td className="py-3 px-3">
                     <div className="flex items-center gap-1.5">
-                      <span className="font-mono text-slate-500 font-semibold">#{run.id}</span>
-                      <span className="font-medium text-white group-hover:text-blue-300 transition-colors">
+                      <Link
+                        href={`/runs/${run.id}`}
+                        onClick={(e) => e.stopPropagation()}
+                        className="font-mono text-blue-300 font-semibold hover:text-blue-200 hover:underline transition-colors"
+                        title={`Open single-run inspection view for run #${run.id}`}
+                      >
+                        #{run.id}
+                      </Link>
+                      <Link
+                        href={`/runs/${run.id}`}
+                        onClick={(e) => e.stopPropagation()}
+                        className="font-medium text-white group-hover:text-blue-300 transition-colors hover:underline"
+                        title={`Open single-run inspection view for run #${run.id}`}
+                      >
                         {run.testName}
-                      </span>
+                      </Link>
                       {run.isBaseline && (
                         <span
                           className="inline-flex items-center gap-0.5 rounded bg-amber-500/10 px-1.5 py-0.5 text-[10px] font-semibold text-amber-300 border border-amber-500/30"
@@ -282,18 +292,7 @@ export function RunTable({ runs, nextCursor, hasMore }: RunTableProps) {
                   </td>
 
                   {/* Action */}
-                  <td className="py-3 pl-3 pr-4 text-center whitespace-nowrap">
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        toggleRun(run);
-                      }}
-                      className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-medium text-slate-300 hover:bg-slate-800 hover:text-white transition-colors"
-                    >
-                      {selected ? 'Deselect' : 'Select'}
-                    </button>
-                  </td>
+                  {/* Action column removed; promote/demote/select moved inline below */}
                 </tr>
               );
             })}

@@ -31,6 +31,7 @@ import { StatusBadge } from '@/components/compare/StatusBadge';
 import { CompatibilityGuard } from '@/components/compare/CompatibilityGuard';
 import { ThreadScalingChart } from '@/components/compare/ThreadScalingChart';
 import { DeltaTable } from '@/components/compare/DeltaTable';
+import { ConfigDiff } from '@/components/compare/ConfigDiff';
 
 export const dynamic = 'force-dynamic';
 
@@ -155,6 +156,16 @@ export default async function ComparePage({ searchParams }: ComparePageProps) {
             baselineId={baselineId}
             candidateId={candidateId}
           />
+
+          {/* Database Configuration Diff */}
+          {baselineRun.config?.parameters?.length || candidateRun.config?.parameters?.length ? (
+            <ConfigDiff
+              baselineParams={baselineRun.config?.parameters ?? []}
+              candidateParams={candidateRun.config?.parameters ?? []}
+              baselineLabel={`Run #${baselineRun.id}`}
+              candidateLabel={`Run #${candidateRun.id}`}
+            />
+          ) : null}
         </>
       )}
     </main>

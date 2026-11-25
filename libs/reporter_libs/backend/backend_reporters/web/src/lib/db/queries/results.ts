@@ -21,7 +21,7 @@
  */
 
 import { query } from '../pool';
-import type { MetricDescriptor, SeriesPoint } from '../../domain/types';
+import type { MetricDescriptor, SeriesPoint, MetricSummaryRow, RawResultRow } from '../../domain/types';
 
 /**
  * Lists all distinct metrics recorded for a given test run.
@@ -91,5 +91,93 @@ export async function getSeries(
     stdDev: Number(r.std_dev),
     iterationsCount: Number(r.iterations_count),
     unit: String(r.unit),
+  }));
+}
+
+/**
+ * Aggregates every metric recorded for a run, grouped by metric + thread count.
+ * Count reflects distinct iterations so duplicated metric rows do not inflate it.
+ */
+export async function getRunMetricMatrix(runId: string): Promise<MetricSummaryRow[]> {
+  const sql = `
+    SELECT
+      metric_name,
+      metric_type,
+      metric_dimension,
+      COALESCE(MAX(metric_unit), '') AS metric_unit,
+      threads,
+      COUNT(DISTINCT iteration) AS iterations_count,
+      MIN(metric_value) AS min_value,
+      MAX(metric_value) AS max_value,
+      AVG(metric_value) AS avg_value,
+      COALESCE(STDDEV(metric_value), 0) AS std_dev
+    FROM results
+    WHERE test_run_id = ?
+    GROUP BY metric_name, metric_type, metric_dimension, threads
+    ORDER BY (metric_type = 'primary') DESC, metric_name ASC, threads ASC;
+  `;
+
+  const rows = await query<any[]>(sql, [runId]);
+  return rows.map((r) => ({
+    metricName: r.metric_name,
+    metricType: r.metric_type,
+    metricDimension: r.metric_dimension,
+    metricUnit: String(r.metric_unit ?? ''),
+    threads: Number(r.threads),
+    count: Number(r.iterations_count),
+    minValue: Number(r.min_value),
+    maxValue: Number(r.max_value),
+    avgValue: Number(r.avg_value),
+    stdDev: Number(r.std_dev),
+  }));
+}
+
+/**
+ * Returns raw per-iteration result rows for optional drill-down/CSV export.
+ */
+export async function getRawResults(
+  runId: string,
+  options: { metricName?: string; threads?: number; limit?: number; offset?: number } = {}
+): Promise<RawResultRow[]> {
+  const conditions: string[] = ['test_run_id = ?'];
+  const params: any[] = [runId];
+
+  if (options.metricName) {
+    conditions.push('metric_name = ?');
+    params.push(options.metricName);
+  }
+  if (options.threads) {
+    conditions.push('threads = ?');
+    params.push(options.threads);
+  }
+
+  const limit = Math.min(Math.max(options.limit ?? 100, 1), 1000);
+  const offset = Math.max(options.offset ?? 0, 0);
+
+  const sql = `
+    SELECT
+      iteration,
+      threads,
+      metric_name,
+      metric_type,
+      metric_dimension,
+      COALESCE(metric_unit, '') AS metric_unit,
+      metric_value
+    FROM results
+    WHERE ${conditions.join(' AND ')}
+    ORDER BY metric_name ASC, threads ASC, iteration ASC
+    LIMIT ? OFFSET ?;
+  `;
+  params.push(limit, offset);
+
+  const rows = await query<any[]>(sql, params);
+  return rows.map((r) => ({
+    iteration: Number(r.iteration),
+    threads: Number(r.threads),
+    metricName: r.metric_name,
+    metricType: r.metric_type,
+    metricDimension: r.metric_dimension,
+    metricUnit: String(r.metric_unit ?? ''),
+    value: Number(r.metric_value),
   }));
 }

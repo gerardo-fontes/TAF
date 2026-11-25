@@ -39,6 +39,28 @@ import { getBackendConfig } from '../config/backendConf';
 
 let pool: mysql.Pool | null = null;
 
+const TRANSIENT_ERROR_CODES = new Set([
+  'ECONNRESET',
+  'ECONNREFUSED',
+  'ETIMEDOUT',
+  'PROTOCOL_CONNECTION_LOST',
+  'ER_LOCK_WAIT_TIMEOUT',
+  'ER_QUERY_INTERRUPTED',
+  'ER_CON_COUNT_ERROR',
+]);
+
+function isTransientDbError(err: any): boolean {
+  if (!err) return false;
+  if (err.code && TRANSIENT_ERROR_CODES.has(String(err.code))) return true;
+  const message = String(err.message || '').toLowerCase();
+  return (
+    message.includes('connection lost') ||
+    message.includes('connection reset') ||
+    message.includes('timeout') ||
+    message.includes('too many connections')
+  );
+}
+
 /**
  * Returns the shared connection pool, initializing it lazily on first access.
  */
@@ -81,11 +103,32 @@ export function getPool(): mysql.Pool {
 
 /**
  * Helper to execute a parameterized read-only query against the pool.
+ *
+ * Transient connection errors (reset, timeout, lock wait) are retried up to
+ * `backend_retries` times with a short exponential backoff so that a single
+ * blip does not surface as an HTTP 500 to the dashboard.
  */
 export async function query<T = any>(sql: string, params: any[] = []): Promise<T> {
-  const p = getPool();
-  const [rows] = await p.query(sql, params);
-  return rows as T;
+  const conf = getBackendConfig();
+  const maxAttempts = Math.max(1, (conf.retries ?? 0) + 1);
+  let lastError: any;
+
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    try {
+      const p = getPool();
+      const [rows] = await p.query(sql, params);
+      return rows as T;
+    } catch (err: any) {
+      lastError = err;
+      if (attempt === maxAttempts - 1 || !isTransientDbError(err)) {
+        throw err;
+      }
+      const delayMs = 50 * Math.pow(2, attempt);
+      await new Promise((resolve) => setTimeout(resolve, delayMs));
+    }
+  }
+
+  throw lastError;
 }
 
 /**

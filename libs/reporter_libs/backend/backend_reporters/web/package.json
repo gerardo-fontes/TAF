@@ -6,7 +6,9 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "postbuild": "node scripts/prepare-standalone.mjs",
     "start": "next start",
+    "start:standalone": "node scripts/prepare-standalone.mjs && node .next/standalone/server.js",
     "lint": "eslint .",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
