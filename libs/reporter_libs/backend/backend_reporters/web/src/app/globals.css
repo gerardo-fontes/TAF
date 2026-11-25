@@ -22,16 +22,18 @@
 
 @import "tailwindcss";
 
-/* ###########################################################################
+/* ########################################################################### *
  * Theme system: remap Tailwind neutral + accent colour scales via CSS vars.
  * ########################################################################### */
 
 html[data-theme] {
-  /* Default (MariaDB light) neutral + accent parameters */
+  /* Default neutral + accent parameters. */
   --n-h: 215;
   --n-s: 16%;
   --a-h: 221;
   --a-s: 83%;
+  --brand-ink: #ffffff;
+  --page-bg: var(--color-slate-950);
 }
 
 html[data-theme="midnight"] {
@@ -69,21 +71,97 @@ html[data-theme="violet"] {
   --a-s: 85%;
 }
 
-/* ---- Light themes -------------------------------------------------------- */
+/* ---- Dark themes (continued) -------------------------------------------- */
 
 /* Official MariaDB Foundation site palette (mariadb.org):
    slate-blue ink (#355872/#48729e, hue ~206) over a faintly warm ivory
-   ground (#F7F8F0), with the site's rust accent (#964A2C). The neutral
-   scale is anchored on blue so surfaces read cool like the official site;
-   --page-bg keeps the barely-warm ivory of the real background. */
+   ground (#F7F8F0), with the site's rust accent (#964A2C).
+   The neutral scale is anchored on blue so surfaces read cool like the
+   official site; --page-bg keeps the barely-warm ivory of the real background. */
+
+/* REVISED (measured directly from the live site's DevTools):
+   The live mariadb.org theme is DARK by default. The "ivory" described above
+   is the site's optional light variant, not its default. 
+   
+   Measured values from mariadb.org:
+     body background: #1B3C53
+     body text:       #F3E9DD
+     secondary text:  #D2C1B6
+     tertiary (borders/panels): #456882
+     accent (buttons): #D08C72
+     note bar:        #9CD5FF (on #325872)
+     
+   To make TAF match exactly without editing component HTML, we map these 
+   exact hex codes to the Tailwind classes TAF already uses (slate for UI, 
+   blue for accent). */
 html[data-theme="mariadb"] {
-  --n-h: 206;
-  --n-s: 18%;
-  --a-h: 20;
-  --a-s: 54%;
-  --brand-ink: #355872;
-  --page-bg: hsl(60 20% 97%);
+  --n-h: 205;
+  --n-s: 35%;
+  --a-h: 17;
+  --a-s: 50%;
+  --brand-ink: #F3E9DD;
+  --page-bg: #1B3C53;
+
+  /* Neutral scale mapped to the target site's exact UI colors */
+  --color-slate-50: #F9F4EC;
+  --color-slate-100: #F3E9DD;
+  /* Primary body text */
+  --color-slate-200: #D2C1B6;
+  /* Secondary text */
+  --color-slate-300: #B5A89F;
+  /* Muted text */
+  --color-slate-400: #8B96A8;
+  /* Placeholder text */
+  --color-slate-500: #6B7D8F;
+  --color-slate-600: #456882;
+  /* Borders, dividers, inputs */
+  --color-slate-700: #325872;
+  /* Slightly lighter panel / hover */
+  --color-slate-800: #2C4E66;
+  /* Primary Card / Panel Background */
+  --color-slate-900: #26485F;
+  /* Darker Card / Header Background */
+  --color-slate-950: #1B3C53;
+  /* Page Background */
+
+  /* Gray mirrors slate */
+  --color-gray-50: #F9F4EC;
+  --color-gray-100: #F3E9DD;
+  --color-gray-200: #D2C1B6;
+  --color-gray-300: #B5A89F;
+  --color-gray-400: #8B96A8;
+  --color-gray-500: #6B7D8F;
+  --color-gray-600: #456882;
+  --color-gray-700: #325872;
+  --color-gray-800: #2C4E66;
+  --color-gray-900: #26485F;
+  --color-gray-950: #1B3C53;
+
+  /* Accent scale — the target site's terracotta (#D08C72) */
+  --color-blue-400: #E0A894;
+  --color-blue-500: #D08C72;
+  /* Primary accent (buttons, active tabs) */
+  --color-blue-600: #B86F53;
+  /* Hover accent */
+  --color-blue-700: #9B573C;
+  --color-blue-800: #7E4029;
+  --color-blue-900: #5A2815;
+  --color-blue-950: #38150A;
+
+  /* Indigo scale — the target site's light-blue (#9CD5FF) for info badges */
+  --color-indigo-400: #B5E0FF;
+  --color-indigo-500: #9CD5FF;
+  --color-indigo-600: #6FBEE8;
+  --color-indigo-700: #4B9FCB;
+  --color-indigo-900: #1E5A7E;
+  --color-indigo-950: #0F3A55;
 }
+
+/* ---- Light themes -------------------------------------------------------- *
+ * mariadb was previously grouped here; it has been moved to the dark-theme
+ * section above because the live mariadb.org theme is dark by default.
+ * The three remaining light themes keep the light-theme inversion below.
+ * -------------------------------------------------------------------------- */
 
 html[data-theme="seafoam"] {
   --n-h: 195;
@@ -109,7 +187,8 @@ html[data-theme="dune"] {
   --brand-ink: #44403c;
 }
 
-/* Map Tailwind colour tokens to the theme parameters above. */
+/* Map Tailwind colour tokens to the theme parameters above.
+   This block provides the DEFAULT (dark) scale for non-mariadb themes. */
 html[data-theme] {
   --color-slate-50: hsl(var(--n-h) var(--n-s) 98%);
   --color-slate-100: hsl(var(--n-h) var(--n-s) 96%);
@@ -122,7 +201,6 @@ html[data-theme] {
   --color-slate-800: hsl(var(--n-h) var(--n-s) 17%);
   --color-slate-900: hsl(var(--n-h) var(--n-s) 10%);
   --color-slate-950: hsl(var(--n-h) var(--n-s) 4%);
-
   --color-gray-50: hsl(var(--n-h) var(--n-s) 98%);
   --color-gray-100: hsl(var(--n-h) var(--n-s) 96%);
   --color-gray-200: hsl(var(--n-h) var(--n-s) 90%);
@@ -134,7 +212,6 @@ html[data-theme] {
   --color-gray-800: hsl(var(--n-h) var(--n-s) 17%);
   --color-gray-900: hsl(var(--n-h) var(--n-s) 10%);
   --color-gray-950: hsl(var(--n-h) var(--n-s) 4%);
-
   --color-blue-400: hsl(var(--a-h) var(--a-s) 68%);
   --color-blue-500: hsl(var(--a-h) var(--a-s) 60%);
   --color-blue-600: hsl(var(--a-h) var(--a-s) 52%);
@@ -142,7 +219,6 @@ html[data-theme] {
   --color-blue-800: hsl(var(--a-h) var(--a-s) 36%);
   --color-blue-900: hsl(var(--a-h) var(--a-s) 26%);
   --color-blue-950: hsl(var(--a-h) var(--a-s) 14%);
-
   --color-indigo-400: hsl(calc(var(--a-h) + 24) var(--a-s) 68%);
   --color-indigo-500: hsl(calc(var(--a-h) + 24) var(--a-s) 60%);
   --color-indigo-600: hsl(calc(var(--a-h) + 24) var(--a-s) 52%);
@@ -151,42 +227,129 @@ html[data-theme] {
   --color-indigo-950: hsl(calc(var(--a-h) + 24) var(--a-s) 14%);
 }
 
-/* ###########################################################################
- * Light-theme support: the five original themes are dark; the four light
- * themes (mariadb/seafoam/paper/dune) need two extra remaps because some
- * markup hardcodes pure-white ink and the vendored MariaDB Foundation logo
- * ships as white+transparent artwork.
- * ########################################################################### */
+/* Light-theme neutral + accent + semantic ladders (seafoam, paper, dune).
+   mariadb is a dark theme and gets its own hand-tuned scale above.
+   Each scale preserves the theme's neutral/accent/status hue while ensuring
+   WCAG AA contrast across light backgrounds, dark buttons, and status tints. */
+html[data-theme="seafoam"],
+html[data-theme="paper"],
+html[data-theme="dune"] {
+  --a-l-200: 22%;
+  --a-l-300: 27%;
+  --a-l-400: 33%;
+  --a-l-500: 46%;
+  --a-l-600: 38%;
+  --a-l-700: 33%;
+  --a-l-800: 64%;
+  --a-l-900: 84%;
+  --a-l-950: 92%;
 
-/* Theme-aware brand ink (e.g. header wordmark) — dark on light themes. */
-html[data-theme] {
-  --brand-ink: #ffffff;
+  --color-slate-50: hsl(var(--n-h) var(--n-s) 8%);
+  --color-slate-100: hsl(var(--n-h) var(--n-s) 12%);
+  --color-slate-200: hsl(var(--n-h) var(--n-s) 16%);
+  --color-slate-300: hsl(var(--n-h) var(--n-s) 22%);
+  --color-slate-400: hsl(var(--n-h) var(--n-s) 28%);
+  --color-slate-500: hsl(var(--n-h) var(--n-s) 35%);
+  --color-slate-600: hsl(var(--n-h) var(--n-s) 42%);
+  --color-slate-700: hsl(var(--n-h) var(--n-s) 72%);
+  --color-slate-800: hsl(var(--n-h) var(--n-s) 88%);
+  --color-slate-900: hsl(var(--n-h) var(--n-s) 95%);
+  --color-slate-950: hsl(var(--n-h) var(--n-s) 97%);
+
+  --color-gray-50: hsl(var(--n-h) var(--n-s) 8%);
+  --color-gray-100: hsl(var(--n-h) var(--n-s) 12%);
+  --color-gray-200: hsl(var(--n-h) var(--n-s) 16%);
+  --color-gray-300: hsl(var(--n-h) var(--n-s) 22%);
+  --color-gray-400: hsl(var(--n-h) var(--n-s) 28%);
+  --color-gray-500: hsl(var(--n-h) var(--n-s) 35%);
+  --color-gray-600: hsl(var(--n-h) var(--n-s) 42%);
+  --color-gray-700: hsl(var(--n-h) var(--n-s) 72%);
+  --color-gray-800: hsl(var(--n-h) var(--n-s) 88%);
+  --color-gray-900: hsl(var(--n-h) var(--n-s) 95%);
+  --color-gray-950: hsl(var(--n-h) var(--n-s) 97%);
+
+  --color-blue-200: hsl(var(--a-h) var(--a-s) var(--a-l-200));
+  --color-blue-300: hsl(var(--a-h) var(--a-s) var(--a-l-300));
+  --color-blue-400: hsl(var(--a-h) var(--a-s) var(--a-l-400));
+  --color-blue-500: hsl(var(--a-h) var(--a-s) var(--a-l-500));
+  --color-blue-600: hsl(var(--a-h) var(--a-s) var(--a-l-600));
+  --color-blue-700: hsl(var(--a-h) var(--a-s) var(--a-l-700));
+  --color-blue-800: hsl(var(--a-h) var(--a-s) var(--a-l-800));
+  --color-blue-900: hsl(var(--a-h) var(--a-s) var(--a-l-900));
+  --color-blue-950: hsl(var(--a-h) var(--a-s) var(--a-l-950));
+
+  --color-indigo-300: hsl(calc(var(--a-h) + 24) var(--a-s) var(--a-l-300));
+  --color-indigo-400: hsl(calc(var(--a-h) + 24) var(--a-s) var(--a-l-400));
+  --color-indigo-500: hsl(calc(var(--a-h) + 24) var(--a-s) var(--a-l-500));
+  --color-indigo-600: hsl(calc(var(--a-h) + 24) var(--a-s) var(--a-l-600));
+  --color-indigo-700: hsl(calc(var(--a-h) + 24) var(--a-s) var(--a-l-700));
+  --color-indigo-900: hsl(calc(var(--a-h) + 24) var(--a-s) var(--a-l-900));
+  --color-indigo-950: hsl(calc(var(--a-h) + 24) var(--a-s) var(--a-l-950));
+
+  /* Semantic status colors: deep saturated ink (200-400) + vibrant tints (500) */
+  --color-rose-300: #881337;
+  --color-rose-400: #9f1239;
+  --color-rose-500: #e11d48;
+
+  --color-amber-200: #713f12;
+  --color-amber-300: #78350f;
+  --color-amber-400: #92400e;
+  --color-amber-500: #d97706;
+  --color-amber-950: #fde68a;
+
+  --color-orange-300: #7c2d12;
+  --color-orange-400: #9a3412;
+  --color-orange-500: #ea580c;
+
+  --color-teal-300: #134e4a;
+  --color-teal-400: #115e59;
+  --color-teal-500: #0d9488;
+
+  --color-emerald-300: #064e3b;
+  --color-emerald-400: #046c4e;
+  --color-emerald-500: #059669;
+
+  --color-purple-300: #581c87;
+  --color-purple-400: #6b21a8;
+  --color-purple-500: #9333ea;
+  --color-purple-600: #7e22ce;
+  --color-purple-800: #a855f7;
+  --color-purple-900: #e9d5ff;
+  --color-purple-950: #f3e8ff;
 }
 
-/* Hardcoded pure-white ink must flip to dark ink on light themes. */
-html[data-theme="mariadb"] .text-white,
-html[data-theme="seafoam"] .text-white,
-html[data-theme="paper"] .text-white,
-html[data-theme="dune"] .text-white {
+/* Dune's orange/gold accent hue is perceptually brighter than blue/indigo at the
+   same HSL lightness, so tighten foreground lightness slightly for WCAG AA. */
+html[data-theme="dune"] {
+  --a-l-200: 22%;
+  --a-l-300: 25%;
+  --a-l-400: 30%;
+  --a-l-500: 45%;
+  --a-l-600: 36%;
+  --a-l-700: 30%;
+  --a-l-800: 62%;
+}
+
+/* ########################################################################### *
+ * Light-theme support: the remaining light themes (seafoam/paper/dune) need
+ * extra remaps because some markup hardcodes pure-white ink.
+ * mariadb is a dark theme, so it is NOT listed here.
+ * ########################################################################### */
+
+:is(html[data-theme="seafoam"], html[data-theme="paper"], html[data-theme="dune"]) .text-white {
   color: var(--brand-ink);
 }
 
-html[data-theme="mariadb"] .ring-white\/10,
-html[data-theme="seafoam"] .ring-white\/10,
-html[data-theme="paper"] .ring-white\/10,
-html[data-theme="dune"] .ring-white\/10 {
+:is(html[data-theme="seafoam"], html[data-theme="paper"], html[data-theme="dune"]) .ring-white\/10 {
   --tw-ring-color: rgb(0 0 0 / 0.1);
 }
 
-/* Theme-aware page ground (body background). Defaults to the neutral 950
-   step; light themes may override with an exact brand colour — mariadb.org
-   uses a barely-warm ivory (#F7F8F0) that no cool neutral step reproduces. */
-html[data-theme] {
-  --page-bg: var(--color-slate-950);
-}
-
-body {
-  background-color: var(--page-bg);
+/* Preserve crisp white ink inside solid filled accent buttons/badges */
+:is(html[data-theme="seafoam"], html[data-theme="paper"], html[data-theme="dune"])
+  :is(.bg-blue-600, .bg-purple-600, .bg-emerald-600, .bg-rose-600, .from-blue-600),
+:is(html[data-theme="seafoam"], html[data-theme="paper"], html[data-theme="dune"])
+  :is(.bg-blue-600, .bg-purple-600, .bg-emerald-600, .bg-rose-600, .from-blue-600) .text-white {
+  color: #ffffff;
 }
 
 /* Utility consumed by the header wordmark. */
@@ -198,12 +361,64 @@ body {
   filter: none;
 }
 
-/* ###########################################################################
- * Custom scrollbars: slim, theme-aware horizontal scrollbar used by the
- * Daily Activity & Status Timeline chart so overflowing day bars can be
- * scrolled manually instead of spilling into neighbouring panels.
+/* Theme-aware page ground. */
+body {
+  background-color: var(--page-bg);
+  color: var(--brand-ink);
+}
+
+/* ########################################################################### *
+ * MariaDB Theme Overrides (Screenshot alignment)
  * ########################################################################### */
 
+/* The target site uses dark text on its orange buttons. */
+html[data-theme="mariadb"] .bg-blue-500,
+html[data-theme="mariadb"] .bg-blue-600 {
+  color: var(--color-slate-950);
+  font-weight: 600;
+}
+
+/* Ensure the top header and left matrix columns match the site's card color */
+html[data-theme="mariadb"] header,
+html[data-theme="mariadb"] .bg-black {
+  background-color: var(--color-slate-900);
+  border-color: var(--color-slate-700);
+}
+
+/* Target the DB Version column (4th column) in tables to match the Compare button */
+html[data-theme="mariadb"] table tbody tr td:nth-child(4)>span,
+html[data-theme="mariadb"] table tbody tr td:nth-child(4)>div {
+  background-color: var(--color-slate-800) !important;
+  color: var(--color-slate-200) !important;
+  border: 1px solid var(--color-slate-600) !important;
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 0.75rem;
+  line-height: 1.25rem;
+  display: inline-block;
+}
+
+/* Fix the Results Matrix background to match the Filters section */
+html[data-theme="mariadb"] table,
+html[data-theme="mariadb"] thead,
+html[data-theme="mariadb"] tbody,
+html[data-theme="mariadb"] tr {
+  background-color: var(--color-slate-800) !important;
+  border-color: var(--color-slate-700) !important;
+}
+
+/* Target only empty cells and headers to lighten them, leaving colored 
+   regression/gain cells untouched so they keep their specific background classes. */
+html[data-theme="mariadb"] td:not([class*="bg-"]),
+html[data-theme="mariadb"] th:not([class*="bg-"]) {
+  background-color: var(--color-slate-900) !important;
+  border-color: var(--color-slate-700) !important;
+}
+
+/* ########################################################################### *
+ * Custom scrollbars: slim, theme-aware horizontal scrollbar used by the
+ * Daily Activity & Status Timeline chart.
+ * ########################################################################### */
 .timeline-scrollbar {
   scrollbar-width: thin;
   scrollbar-color: hsl(var(--n-h) var(--n-s) 30%) transparent;

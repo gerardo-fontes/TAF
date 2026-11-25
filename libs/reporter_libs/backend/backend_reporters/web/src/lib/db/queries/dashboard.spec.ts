@@ -4,6 +4,7 @@
  * #
  * # Created: October 2026
  * # Last Modified: October 2026
+ * # Last Modified: November 2026
  * #
  * # This file is part of the Test Automation Framework (TAF).
  * # Copyright (c) 2025-2026 MariaDB Foundation, Jonathan "jeb" Miller and Gerardo Fontes
@@ -74,6 +75,37 @@ describe('dashboard queries', () => {
       'MDEV-39497',
       'regressed',
     ]);
+  });
+
+  it('omits severity condition when includeSeverity is false', () => {
+    const filters = {
+      days: 7,
+      suite: 'hammerdb-tpcc',
+      severity: 'gain',
+    };
+
+    const { whereSql, params } = buildDashboardWhere(filters, undefined, false);
+    expect(whereSql).toContain('r.test_timestamp >= NOW() - INTERVAL ? DAY');
+    expect(whereSql).toContain('r.suite_name = ?');
+    expect(whereSql).not.toContain('LOWER(c.status)');
+    expect(params).toEqual([7, 'hammerdb-tpcc']);
+  });
+
+  it('honors custom table aliases in WHERE clause', () => {
+    const filters = {
+      suite: 'sysbench-lua',
+      host: 'node-02',
+      severity: 'warning',
+    };
+    const customAliases = { run: 'test_run', system: 'sys_host', comparison: 'cmp' };
+
+    const { whereSql, params } = buildDashboardWhere(filters, customAliases, true);
+    expect(whereSql).toContain('test_run.suite_name = ?');
+    expect(whereSql).toContain('sys_host.host_name = ?');
+    expect(whereSql).toContain('LOWER(cmp.status) = LOWER(?)');
+    expect(params).toContain('sysbench-lua');
+    expect(params).toContain('node-02');
+    expect(params).toContain('warning');
   });
 
   it('omits timestamp filter when days is 0 (all history)', () => {
@@ -159,6 +191,21 @@ describe('dashboard queries', () => {
     }
     for (const sh of data.suiteHealth) {
       expect(sh.suiteName).toBe('hammerdb-tpcc');
+    }
+  });
+
+  it('paginates regression feed with keyset cursor without item duplication', async () => {
+    const page1 = await getDashboardData({ days: 30, limit: 3 });
+    expect(page1.feed.length).toBeLessThanOrEqual(3);
+
+    if (page1.hasMoreFeed && page1.feedCursor) {
+      const page2 = await getDashboardData({ days: 30, limit: 3, cursor: page1.feedCursor });
+      expect(page2.feed.length).toBeGreaterThan(0);
+
+      const p1Ids = new Set(page1.feed.map((f) => f.comparisonId));
+      for (const item of page2.feed) {
+        expect(p1Ids.has(item.comparisonId)).toBe(false);
+      }
     }
   });
 });

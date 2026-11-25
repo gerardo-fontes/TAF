@@ -242,12 +242,11 @@ export function DashboardResultsTable({
   if (filters.severity) returnParams.set('severity', filters.severity);
   const returnQuery = returnParams.toString();
   const compareHref = (item: DashboardResultRow) =>
-    `/compare?baseline=${item.baselineRunId}&candidate=${item.candidateRunId}${
-      returnQuery ? `&${returnQuery}` : ''
+    `/compare?baseline=${item.baselineRunId}&candidate=${item.candidateRunId}${returnQuery ? `&${returnQuery}` : ''
     }`;
 
   return (
-    <div className="rounded-xl border border-slate-800 bg-slate-900 overflow-hidden">
+    <div className="rounded-xl border border-slate-800 bg-slate-900/50 overflow-hidden">
       <div className="flex flex-wrap items-center justify-between gap-3 p-4 border-b border-slate-800/80">
         <div>
           <h3 className="text-base font-bold text-white tracking-tight">Results Matrix</h3>
@@ -285,9 +284,8 @@ export function DashboardResultsTable({
                     key={key}
                     scope="col"
                     title={key}
-                    className={`sticky top-0 z-20 min-w-[92px] w-[92px] border-b border-r border-slate-800/60 bg-slate-950 px-2 py-2.5 text-center font-mono text-[11px] font-semibold ${
-                      key === today ? 'text-blue-300' : 'text-slate-400'
-                    }`}
+                    className={`sticky top-0 z-20 min-w-[92px] w-[92px] border-b border-r border-slate-800/60 bg-slate-950 px-2 py-2.5 text-center font-mono text-[11px] font-semibold ${key === today ? 'text-blue-300' : 'text-slate-400'
+                      }`}
                   >
                     {columnLabel(key)}
                   </th>
@@ -380,17 +378,15 @@ function ResultCell({ item, entry, href, onOpenTriage, stacked }: ResultCellProp
 
   return (
     <div
-      className={`relative flex min-h-14 flex-col items-center justify-center gap-0.5 px-2 py-2 ${tint} ${
-        stacked ? 'border-t border-slate-950/60 first:border-t-0' : ''
-      }`}
+      className={`relative flex min-h-14 flex-col items-center justify-center gap-0.5 px-2 py-2 ${tint} ${stacked ? 'border-t border-slate-950/60 first:border-t-0' : ''
+        }`}
     >
       {/* Background hit area: opens the triage popup */}
       <button
         type="button"
         onClick={onOpenTriage}
-        aria-label={`Triage ${item.candidateTestName}, ${item.status}${
-          entry ? `, currently ${entry.workflowStatus}` : ''
-        }`}
+        aria-label={`Triage ${item.candidateTestName}, ${item.status}${entry ? `, currently ${entry.workflowStatus}` : ''
+          }`}
         title={tip}
         className="absolute inset-0 h-full w-full cursor-pointer transition-colors hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-400"
       />
@@ -578,11 +574,10 @@ function TriageModal({ item, entry, href, onClose, onSaved }: TriageModalProps) 
                     role="radio"
                     aria-checked={selected}
                     onClick={() => setWorkflowStatus(ws)}
-                    className={`rounded-lg border px-2.5 py-1 text-xs font-semibold transition-colors ${
-                      selected
-                        ? 'border-blue-500 bg-blue-500/20 text-blue-200'
-                        : 'border-slate-700 bg-slate-950 text-slate-300 hover:border-slate-500'
-                    }`}
+                    className={`rounded-lg border px-2.5 py-1 text-xs font-semibold transition-colors ${selected
+                      ? 'border-blue-500 bg-blue-500/20 text-blue-200'
+                      : 'border-slate-700 bg-slate-950 text-slate-300 hover:border-slate-500'
+                      }`}
                   >
                     {ws}
                   </button>

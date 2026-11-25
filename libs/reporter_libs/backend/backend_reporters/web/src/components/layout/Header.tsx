@@ -23,13 +23,44 @@
 
 'use client';
 
+import React, { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useThemeStore } from '@/stores/theme';
 import { ThemeSwitcher } from '@/components/theme/ThemeSwitcher';
 
 export function Header() {
   const pathname = usePathname();
+  const storeTheme = useThemeStore((s) => s.themeId);
+
+  const [initialTheme] = useState<string>(() => {
+    if (typeof document !== 'undefined') {
+      return document.documentElement.getAttribute('data-theme') || 'mariadb';
+    }
+    return 'mariadb';
+  });
+
+  // Effective theme tracks the store, but preserves a manually-set light theme
+  // captured during the first render so the logo does not flash white before
+  // the persisted theme has been rehydrated.
+  const [effectiveTheme, setEffectiveTheme] = useState<string>(initialTheme);
+  const firstRun = useRef(true);
+  useEffect(() => {
+    if (firstRun.current) {
+      firstRun.current = false;
+      return;
+    }
+    setEffectiveTheme(storeTheme);
+  }, [storeTheme]);
+
+  // The vendored MariaDB Foundation logo ships with white lettering. On the
+  // light-background themes (Seafoam Sky, Paper Indigo, Dune Sand) white
+  // letters are invisible, so use the black-letter variant there.
+  const lightLogoThemes = new Set(['seafoam', 'paper', 'dune']);
+  const logoSrc = lightLogoThemes.has(effectiveTheme) || lightLogoThemes.has(storeTheme)
+    ? '/icons/mariaDBFoundation_dark_transparent.svg'
+    : '/icons/mariaDBFoundation_light_transparent.svg';
 
   const navItems = [
     { label: 'Run Browser', href: '/' },
@@ -49,7 +80,7 @@ export function Header() {
                 colours show on light themes; dark themes get a lightness-only
                 invert via CSS (see globals.css .taf-logo rules). */}
             <Image
-              src="/icons/mariaDBFoundation_light_transparent.svg"
+              src={logoSrc}
               alt="MariaDB Foundation logo"
               width={80}
               height={30}

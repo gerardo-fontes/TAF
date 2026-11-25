@@ -53,7 +53,7 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className="min-h-screen bg-slate-950 text-slate-100 antialiased font-sans flex flex-col">
+      <body className="min-h-screen antialiased font-sans flex flex-col">
         <Header />
         <div className="flex-1">
           {children}

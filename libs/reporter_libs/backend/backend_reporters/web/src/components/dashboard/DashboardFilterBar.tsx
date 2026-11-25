@@ -71,7 +71,6 @@ export function DashboardFilterBar({
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-2.5 text-xs">
         {/* Severity Status Filter */}
         <div>
-          <label className="block text-[10px] font-medium text-slate-400 mb-1">Status / Severity</label>
           <label htmlFor="filter-severity" className="block text-[10px] font-medium text-slate-400 mb-1">Status / Severity</label>
           <select
             id="filter-severity"
@@ -92,7 +91,6 @@ export function DashboardFilterBar({
 
         {/* Suite Filter */}
         <div>
-          <label className="block text-[10px] font-medium text-slate-400 mb-1">Test Suite</label>
           <label htmlFor="filter-suite" className="block text-[10px] font-medium text-slate-400 mb-1">Test Suite</label>
           <input
             id="filter-suite"
@@ -107,7 +105,6 @@ export function DashboardFilterBar({
 
         {/* Host Filter */}
         <div>
-          <label className="block text-[10px] font-medium text-slate-400 mb-1">Host Machine</label>
           <label htmlFor="filter-host" className="block text-[10px] font-medium text-slate-400 mb-1">Host Machine</label>
           <input
             id="filter-host"
@@ -122,7 +119,6 @@ export function DashboardFilterBar({
 
         {/* DB Version Filter */}
         <div>
-          <label className="block text-[10px] font-medium text-slate-400 mb-1">Database Version</label>
           <label htmlFor="filter-dbversion" className="block text-[10px] font-medium text-slate-400 mb-1">Database Version</label>
           <input
             id="filter-dbversion"
@@ -137,7 +133,6 @@ export function DashboardFilterBar({
 
         {/* Workload Hash Filter */}
         <div>
-          <label className="block text-[10px] font-medium text-slate-400 mb-1">Workload Hash</label>
           <label htmlFor="filter-hash" className="block text-[10px] font-medium text-slate-400 mb-1">Workload Hash</label>
           <input
             id="filter-hash"
@@ -152,7 +147,6 @@ export function DashboardFilterBar({
 
         {/* Tag Filter */}
         <div>
-          <label className="block text-[10px] font-medium text-slate-400 mb-1">Case Tag / Jira</label>
           <label htmlFor="filter-tag" className="block text-[10px] font-medium text-slate-400 mb-1">Case Tag / Jira</label>
           <input
             id="filter-tag"
