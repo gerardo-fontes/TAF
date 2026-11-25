@@ -100,6 +100,7 @@ export function FilterBar({ facets }: FilterBarProps) {
             onChange={(e) => setSearchInput(e.target.value)}
             onBlur={() => updateParam('search', searchInput)}
             placeholder="Search runs by test name, tag, or notes..."
+            aria-label="Search runs by test name, tag, or notes"
             className="w-full rounded-lg border border-slate-800 bg-slate-950/80 py-2 pl-9 pr-8 text-sm text-slate-100 placeholder-slate-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-colors"
           />
           {searchInput && (
@@ -146,8 +147,10 @@ export function FilterBar({ facets }: FilterBarProps) {
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-2 pt-2 border-t border-slate-800/80">
         {/* 1. Test Suite */}
         <div>
-          <label className="block text-[11px] font-medium text-slate-400 mb-1">Suite</label>
+          <label htmlFor="filter-suite-select" className="block text-[11px] font-medium text-slate-400 mb-1">Suite</label>
           <select
+            id="filter-suite-select"
+            aria-label="Filter by Test Suite"
             value={currentSuite}
             onChange={(e) => updateParam('suite', e.target.value)}
             className="w-full rounded-md border border-slate-800 bg-slate-950 py-1.5 px-2 text-xs text-slate-200 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
@@ -163,8 +166,10 @@ export function FilterBar({ facets }: FilterBarProps) {
 
         {/* 2. System / Host */}
         <div>
-          <label className="block text-[11px] font-medium text-slate-400 mb-1">Host / System</label>
+          <label htmlFor="filter-system-select" className="block text-[11px] font-medium text-slate-400 mb-1">Host / System</label>
           <select
+            id="filter-system-select"
+            aria-label="Filter by Host or System"
             value={currentHost}
             onChange={(e) => updateParam('host', e.target.value)}
             className="w-full rounded-md border border-slate-800 bg-slate-950 py-1.5 px-2 text-xs text-slate-200 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
@@ -180,8 +185,10 @@ export function FilterBar({ facets }: FilterBarProps) {
 
         {/* 3. DB Version */}
         <div>
-          <label className="block text-[11px] font-medium text-slate-400 mb-1">DB Version</label>
+          <label htmlFor="filter-version-select" className="block text-[11px] font-medium text-slate-400 mb-1">DB Version</label>
           <select
+            id="filter-version-select"
+            aria-label="Filter by Database Version"
             value={currentVersion}
             onChange={(e) => updateParam('dbVersion', e.target.value)}
             className="w-full rounded-md border border-slate-800 bg-slate-950 py-1.5 px-2 text-xs text-slate-200 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
@@ -197,8 +204,10 @@ export function FilterBar({ facets }: FilterBarProps) {
 
         {/* 4. Time Window */}
         <div>
-          <label className="block text-[11px] font-medium text-slate-400 mb-1">Time Window</label>
+          <label htmlFor="filter-days-select" className="block text-[11px] font-medium text-slate-400 mb-1">Time Window</label>
           <select
+            id="filter-days-select"
+            aria-label="Filter by Time Window"
             value={currentDays}
             onChange={(e) => updateParam('days', e.target.value)}
             className="w-full rounded-md border border-slate-800 bg-slate-950 py-1.5 px-2 text-xs text-slate-200 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
@@ -214,8 +223,10 @@ export function FilterBar({ facets }: FilterBarProps) {
 
         {/* 5. Baseline Filter */}
         <div>
-          <label className="block text-[11px] font-medium text-slate-400 mb-1">Baseline Role</label>
+          <label htmlFor="filter-baseline-select" className="block text-[11px] font-medium text-slate-400 mb-1">Baseline Role</label>
           <select
+            id="filter-baseline-select"
+            aria-label="Filter by Baseline Role"
             value={currentBaseline}
             onChange={(e) => updateParam('baseline', e.target.value)}
             className="w-full rounded-md border border-slate-800 bg-slate-950 py-1.5 px-2 text-xs text-slate-200 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
@@ -228,8 +239,10 @@ export function FilterBar({ facets }: FilterBarProps) {
 
         {/* 6. Tag */}
         <div>
-          <label className="block text-[11px] font-medium text-slate-400 mb-1">Tag</label>
+          <label htmlFor="filter-tag-select" className="block text-[11px] font-medium text-slate-400 mb-1">Tag</label>
           <select
+            id="filter-tag-select"
+            aria-label="Filter by Test Case Tag"
             value={currentTag}
             onChange={(e) => updateParam('tag', e.target.value)}
             className="w-full rounded-md border border-slate-800 bg-slate-950 py-1.5 px-2 text-xs text-slate-200 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
@@ -245,8 +258,10 @@ export function FilterBar({ facets }: FilterBarProps) {
 
         {/* 7. Workload Hash */}
         <div>
-          <label className="block text-[11px] font-medium text-slate-400 mb-1">Workload</label>
+          <label htmlFor="filter-hash-select" className="block text-[11px] font-medium text-slate-400 mb-1">Workload</label>
           <select
+            id="filter-hash-select"
+            aria-label="Filter by Workload Hash"
             value={currentWorkload}
             onChange={(e) => updateParam('workloadHash', e.target.value)}
             className="w-full rounded-md border border-slate-800 bg-slate-950 py-1.5 px-2 text-xs text-slate-200 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"

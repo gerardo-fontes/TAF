@@ -100,7 +100,7 @@ export function StatusRollupCards({
   };
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+    <div className="rounded-xl border border-slate-800 bg-slate-900/50 p-4 backdrop-blur grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
       {rollups.map((r) => {
         const isActive = activeSeverity?.toLowerCase() === r.status.toLowerCase();
         const style = getCardStyle(r.status, isActive);
@@ -108,19 +108,14 @@ export function StatusRollupCards({
         return (
           <div
             key={r.status}
-            onClick={() => onSelectSeverity(isActive ? undefined : r.status.toLowerCase())}
-            className={`group cursor-pointer rounded-xl border p-4 transition-all backdrop-blur ${style.bg} ${style.border} flex flex-col justify-between`}
-            role="button"
-            tabIndex={0}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                onSelectSeverity(isActive ? undefined : r.status.toLowerCase());
-              }
-            }}
-            aria-label={`${r.count} comparisons classified as ${r.status} (${r.pctOfTotal}% of total)`}
+            className={`group rounded-xl border p-4 transition-all backdrop-blur ${style.bg} ${style.border} flex flex-col justify-between`}
           >
-            <div>
+            <button
+              type="button"
+              onClick={() => onSelectSeverity(isActive ? undefined : r.status.toLowerCase())}
+              className="text-left w-full cursor-pointer focus:outline-none"
+              aria-label={`${r.count} comparisons classified as ${r.status} (${r.pctOfTotal}% of total)`}
+            >
               <div className="flex items-center justify-between gap-1 mb-2">
                 <span className={`font-mono text-xs font-black ${style.text}`}>
                   {style.glyph} {style.label}
@@ -133,17 +128,20 @@ export function StatusRollupCards({
               <div className="text-2xl font-black text-white font-mono tracking-tight">
                 {r.count.toLocaleString()}
               </div>
-            </div>
+            </button>
 
             <div className="mt-3 pt-2 border-t border-slate-800/60 flex items-center justify-between text-[10px]">
-              <span className="text-slate-400 group-hover:text-slate-200">
+              <button
+                type="button"
+                onClick={() => onSelectSeverity(isActive ? undefined : r.status.toLowerCase())}
+                className="text-slate-400 group-hover:text-slate-200 hover:underline cursor-pointer"
+              >
                 {isActive ? 'Filtered ✓' : 'Filter feed'}
-              </span>
+              </button>
 
               {/* Dual drill-down link to Run Browser */}
               <Link
                 href={`/?days=${days > 0 ? days : ''}`}
-                onClick={(e) => e.stopPropagation()}
                 className="text-slate-400 hover:text-white underline"
                 title={`Open Run Browser for ${r.status}`}
               >

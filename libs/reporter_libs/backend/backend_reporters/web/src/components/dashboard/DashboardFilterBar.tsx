@@ -40,11 +40,11 @@ export function DashboardFilterBar({
 }: DashboardFilterBarProps) {
   const hasActiveFilters = Boolean(
     filters.suite ||
-      filters.host ||
-      filters.dbVersion ||
-      filters.workloadHash ||
-      filters.tag ||
-      filters.severity
+    filters.host ||
+    filters.dbVersion ||
+    filters.workloadHash ||
+    filters.tag ||
+    filters.severity
   );
 
   return (
@@ -72,7 +72,10 @@ export function DashboardFilterBar({
         {/* Severity Status Filter */}
         <div>
           <label className="block text-[10px] font-medium text-slate-400 mb-1">Status / Severity</label>
+          <label htmlFor="filter-severity" className="block text-[10px] font-medium text-slate-400 mb-1">Status / Severity</label>
           <select
+            id="filter-severity"
+            aria-label="Filter by Status / Severity"
             value={filters.severity || ''}
             onChange={(e) => onChangeFilters({ severity: e.target.value || undefined })}
             className="w-full rounded-lg border border-slate-800 bg-slate-950 px-2.5 py-1.5 text-xs text-white focus:border-blue-500 focus:outline-none"
@@ -90,7 +93,10 @@ export function DashboardFilterBar({
         {/* Suite Filter */}
         <div>
           <label className="block text-[10px] font-medium text-slate-400 mb-1">Test Suite</label>
+          <label htmlFor="filter-suite" className="block text-[10px] font-medium text-slate-400 mb-1">Test Suite</label>
           <input
+            id="filter-suite"
+            aria-label="Filter by Test Suite"
             type="text"
             placeholder="e.g. hammerdb-tpcc"
             value={filters.suite || ''}
@@ -102,7 +108,10 @@ export function DashboardFilterBar({
         {/* Host Filter */}
         <div>
           <label className="block text-[10px] font-medium text-slate-400 mb-1">Host Machine</label>
+          <label htmlFor="filter-host" className="block text-[10px] font-medium text-slate-400 mb-1">Host Machine</label>
           <input
+            id="filter-host"
+            aria-label="Filter by Host Machine"
             type="text"
             placeholder="e.g. benchmark-node-01"
             value={filters.host || ''}
@@ -114,7 +123,10 @@ export function DashboardFilterBar({
         {/* DB Version Filter */}
         <div>
           <label className="block text-[10px] font-medium text-slate-400 mb-1">Database Version</label>
+          <label htmlFor="filter-dbversion" className="block text-[10px] font-medium text-slate-400 mb-1">Database Version</label>
           <input
+            id="filter-dbversion"
+            aria-label="Filter by Database Version"
             type="text"
             placeholder="e.g. 11.8.0"
             value={filters.dbVersion || ''}
@@ -126,7 +138,10 @@ export function DashboardFilterBar({
         {/* Workload Hash Filter */}
         <div>
           <label className="block text-[10px] font-medium text-slate-400 mb-1">Workload Hash</label>
+          <label htmlFor="filter-hash" className="block text-[10px] font-medium text-slate-400 mb-1">Workload Hash</label>
           <input
+            id="filter-hash"
+            aria-label="Filter by Workload Hash"
             type="text"
             placeholder="Exact hash"
             value={filters.workloadHash || ''}
@@ -138,7 +153,10 @@ export function DashboardFilterBar({
         {/* Tag Filter */}
         <div>
           <label className="block text-[10px] font-medium text-slate-400 mb-1">Case Tag / Jira</label>
+          <label htmlFor="filter-tag" className="block text-[10px] font-medium text-slate-400 mb-1">Case Tag / Jira</label>
           <input
+            id="filter-tag"
+            aria-label="Filter by Case Tag or Jira"
             type="text"
             placeholder="e.g. MDEV-39497"
             value={filters.tag || ''}

@@ -106,6 +106,13 @@ npm run db:reset
 npm run db:explain
 ```
 
+### Test Suite Architecture
+
+The test suite is powered by Vitest, Testing Library, and axe-core:
+- **Unit & Integration:** `*.spec.ts` files testing configuration parsing, database queries, mathematical parity, keyset pagination, and domain logic.
+- **Workflow Integration:** `src/e2e/workflows.spec.tsx` verifying end-to-end user journeys (Run Browser multi-selection, Compare view compatibility guards, Dashboard time windows, multi-filter composition, and drill-downs).
+- **Accessibility Audits:** `src/e2e/a11y.spec.tsx` executing automated axe-core audits across all components targeting WCAG 2.1 AA compliance.
+
 ---
 
 ## REST API Surface

@@ -143,4 +143,16 @@ This document records the foundational decisions agreed upon with the TAF mainta
   The automated results dashboard filters runs by time windows (`r.test_timestamp >= NOW() - INTERVAL ? DAY`). In `create_backend.sql`, the existing index covering timestamps on `test_run` is `uq_test_identity (system_id, config_id, suite_name, test_name, test_timestamp)`. Because `test_timestamp` is the 5th column in a compound key, range filtering on timestamp alone cannot take advantage of leading-column B-tree index pruning.
   - Rather than making unapproved DDL changes to the database schema in a frontend pull request, we propose `KEY idx_test_run_timestamp (test_timestamp)` as an upstream performance optimization for high-scale installations (>100,000 runs).
 
+---
+
+## 11. Automated Accessibility & Workflow Testing Architecture
+
+- **Decision:** Automated accessibility compliance (WCAG 2.1 AA) and end-to-end integration workflows are validated using `vitest`, `@testing-library/react`, `jsdom`, and `axe-core`.
+- **Date:** November 2026
+- **Rationale:**
+  The frontend UI serves MariaDB performance engineers, release managers, and community contributors across different browsers, devices, and assistive technologies.
+  - Using `axe-core` directly inside our existing test runner guarantees fast, repeatable accessibility audits (WCAG 2.1 AA) for all views and interactive components without requiring external headless browser binaries or remote downloads.
+  - Full interaction workflows (filtering, selection, swapping roles, threshold overriding, keyset loading, and navigation drill-downs) are comprehensively tested as unit and integration specs.
+
+
 
