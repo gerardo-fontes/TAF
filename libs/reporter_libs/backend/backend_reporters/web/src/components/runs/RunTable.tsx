@@ -36,6 +36,25 @@ interface RunTableProps {
   hasMore: boolean;
 }
 
+const CURSOR_STACK_KEY = 'taf.runs.cursorStack';
+
+function readCursorStack(): string[] {
+  try {
+    const raw = sessionStorage.getItem(CURSOR_STACK_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+function writeCursorStack(stack: string[]): void {
+  try {
+    sessionStorage.setItem(CURSOR_STACK_KEY, JSON.stringify(stack));
+  } catch {
+    /* ignore */
+  }
+}
+
 export function RunTable({ runs, nextCursor, hasMore }: RunTableProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -86,10 +105,34 @@ export function RunTable({ runs, nextCursor, hasMore }: RunTableProps) {
     }
   };
 
+  useEffect(() => {
+    if (!searchParams.get('cursor')) {
+      writeCursorStack([]);
+    }
+  }, [searchParams]);
+
   const handleNextPage = () => {
     if (!nextCursor) return;
+    const stack = readCursorStack();
+    stack.push(searchParams.get('cursor') || '');
+    writeCursorStack(stack);
+
     const params = new URLSearchParams(searchParams.toString());
     params.set('cursor', nextCursor);
+    router.push(`/?${params.toString()}`);
+  };
+
+  const handlePrevPage = () => {
+    const stack = readCursorStack();
+    const prev = stack.length > 0 ? stack.pop()! : null;
+    writeCursorStack(stack);
+
+    const params = new URLSearchParams(searchParams.toString());
+    if (prev) {
+      params.set('cursor', prev);
+    } else {
+      params.delete('cursor');
+    }
     router.push(`/?${params.toString()}`);
   };
 
@@ -126,7 +169,7 @@ export function RunTable({ runs, nextCursor, hasMore }: RunTableProps) {
               <th scope="col" className="py-3.5 px-3">
                 Threads
               </th>
-              <th scope="col" className="py-3.5 px-3 text-right">
+              <th scope="col" className="py-3.5 px-3 text-right" title="Total raw metric rows recorded for this run (top) and number of comparisons where this run is the candidate (bottom)">
                 Results
               </th>
               {/* Action column removed per user preference */}
@@ -285,8 +328,10 @@ export function RunTable({ runs, nextCursor, hasMore }: RunTableProps) {
 
                   {/* Results Count */}
                   <td className="py-3 px-3 whitespace-nowrap text-right">
-                    <div className="font-mono text-slate-200 font-semibold">{run.resultCount}</div>
-                    <div className="text-[10px] text-slate-500 font-sans">
+                    <div className="font-mono text-slate-200 font-semibold" title="Total raw metric rows recorded for this run">
+                      {run.resultCount}
+                    </div>
+                    <div className="text-[10px] text-slate-500 font-sans" title="Number of comparisons where this run is the candidate">
                       {run.comparisonCount} comp{run.comparisonCount === 1 ? '' : 's'}
                     </div>
                   </td>
@@ -306,16 +351,28 @@ export function RunTable({ runs, nextCursor, hasMore }: RunTableProps) {
           Showing <span className="font-semibold text-slate-200">{runs.length}</span> test runs
         </div>
 
-        {hasMore && nextCursor && (
-          <button
-            type="button"
-            onClick={handleNextPage}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-slate-700 bg-slate-800 px-3 py-1.5 text-xs font-semibold text-slate-200 hover:border-slate-500 hover:bg-slate-700 hover:text-white transition-all shadow"
-          >
-            <span>Load Next Page</span>
-            <ArrowRightIcon className="w-3.5 h-3.5" />
-          </button>
-        )}
+        <div className="flex items-center gap-2">
+          {searchParams.get('cursor') && (
+            <button
+              type="button"
+              onClick={handlePrevPage}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-slate-700 bg-slate-800 px-3 py-1.5 text-xs font-semibold text-slate-200 hover:border-slate-500 hover:bg-slate-700 hover:text-white transition-all shadow"
+            >
+              <span>Load Previous Page</span>
+            </button>
+          )}
+
+          {hasMore && nextCursor && (
+            <button
+              type="button"
+              onClick={handleNextPage}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-slate-700 bg-slate-800 px-3 py-1.5 text-xs font-semibold text-slate-200 hover:border-slate-500 hover:bg-slate-700 hover:text-white transition-all shadow"
+            >
+              <span>Load Next Page</span>
+              <ArrowRightIcon className="w-3.5 h-3.5" />
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );

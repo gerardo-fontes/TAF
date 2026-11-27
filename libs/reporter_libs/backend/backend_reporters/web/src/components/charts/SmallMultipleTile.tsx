@@ -48,6 +48,7 @@ interface SmallMultipleTileProps {
   isSelected: boolean;
   onSelect: (metric: string) => void;
   threadOfMaxChange?: number;
+  singleRun?: boolean;
 }
 
 export const SmallMultipleTile = memo(function SmallMultipleTile({
@@ -60,6 +61,7 @@ export const SmallMultipleTile = memo(function SmallMultipleTile({
   isSelected,
   onSelect,
   threadOfMaxChange,
+  singleRun = false,
 }: SmallMultipleTileProps) {
   const width = 280;
   const height = 180;
@@ -178,7 +180,7 @@ export const SmallMultipleTile = memo(function SmallMultipleTile({
           </div>
         </div>
 
-        {maxDeltaPoint && (
+        {!singleRun && maxDeltaPoint && (
           <span
             className={`rounded px-1.5 py-0.5 font-mono text-[10px] font-bold shrink-0 ${
               maxDeltaPoint.changePct > 0
@@ -266,7 +268,7 @@ export const SmallMultipleTile = memo(function SmallMultipleTile({
               stroke="none"
             />
           )}
-          {candidateVarianceArea && (
+          {!singleRun && candidateVarianceArea && (
             <path
               d={candidateVarianceArea}
               fill={CHART_SERIES.candidate.varianceBandFill}
@@ -286,7 +288,7 @@ export const SmallMultipleTile = memo(function SmallMultipleTile({
           )}
 
           {/* Candidate Line (Dashed) */}
-          {candidateLinePath && (
+          {!singleRun && candidateLinePath && (
             <path
               d={candidateLinePath}
               fill="none"
@@ -305,14 +307,16 @@ export const SmallMultipleTile = memo(function SmallMultipleTile({
             return (
               <g key={p.threads}>
                 <circle cx={x} cy={yB} r={2.5} fill={CHART_SERIES.baseline.stroke} />
-                <rect
-                  x={x - 2}
-                  y={yC - 2}
-                  width={4}
-                  height={4}
-                  transform={`rotate(45 ${x} ${yC})`}
-                  fill={CHART_SERIES.candidate.stroke}
-                />
+                {!singleRun && (
+                  <rect
+                    x={x - 2}
+                    y={yC - 2}
+                    width={4}
+                    height={4}
+                    transform={`rotate(45 ${x} ${yC})`}
+                    fill={CHART_SERIES.candidate.stroke}
+                  />
+                )}
               </g>
             );
           })}

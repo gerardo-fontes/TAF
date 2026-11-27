@@ -34,6 +34,7 @@ export interface RunFilters {
   dbVersion?: string;
   workloadHash?: string;
   tag?: string;
+  testType?: string;
   isBaseline?: boolean;
   days?: number;
   search?: string;
@@ -93,6 +94,11 @@ export async function listRuns(filters: RunFilters = {}): Promise<ListRunsResult
     params.push(filters.tag);
   }
 
+  if (filters.testType) {
+    conditions.push('r.test_type = ?');
+    params.push(filters.testType);
+  }
+
   if (typeof filters.isBaseline === 'boolean') {
     conditions.push('r.is_baseline = ?');
     params.push(filters.isBaseline ? 1 : 0);
@@ -104,9 +110,9 @@ export async function listRuns(filters: RunFilters = {}): Promise<ListRunsResult
   }
 
   if (filters.search) {
-    conditions.push('(r.test_name LIKE ? OR r.test_case_tag LIKE ? OR r.comments LIKE ?)');
+    conditions.push('(r.test_name LIKE ? OR r.test_case_tag LIKE ? OR r.comments LIKE ? OR r.test_type LIKE ?)');
     const term = `%${filters.search}%`;
-    params.push(term, term, term);
+    params.push(term, term, term, term);
   }
 
   // Keyset cursor handling
@@ -254,9 +260,10 @@ export async function getRunById(id: string): Promise<RunDetail | null> {
   const countsSql = `
     SELECT
       (SELECT COUNT(*) FROM results WHERE test_run_id = ?) AS result_count,
+      (SELECT COUNT(DISTINCT iteration) FROM results WHERE test_run_id = ?) AS iteration_count,
       (SELECT COUNT(*) FROM test_run_comparison WHERE candidate_run_id = ?) AS comparison_count;
   `;
-  const [counts] = await query<any[]>(countsSql, [id, id]);
+  const [counts] = await query<any[]>(countsSql, [id, id, id]);
 
   return {
     id: String(r.id),
@@ -278,6 +285,7 @@ export async function getRunById(id: string): Promise<RunDetail | null> {
     threadList: r.thread_list,
     threads: parseThreadList(r.thread_list),
     resultCount: Number(counts?.result_count || 0),
+    iterationCount: Number(counts?.iteration_count || 0),
     comparisonCount: Number(counts?.comparison_count || 0),
     tafHarnessName: r.taf_harness_name,
     tafHarnessVersion: r.taf_harness_version,
@@ -293,6 +301,8 @@ export async function getRunById(id: string): Promise<RunDetail | null> {
     pctDurationDrift: Number(r.pct_duration_drift ?? 10),
     testType: r.test_type,
     comments: r.comments,
+    testRunProperties: r.test_run_properties,
+    testRunPropertiesContents: r.test_run_properties_contents,
     system: {
       id: String(r.system_id),
       hostName: r.host_name,

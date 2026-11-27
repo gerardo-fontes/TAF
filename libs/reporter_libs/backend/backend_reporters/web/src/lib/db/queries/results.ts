@@ -165,7 +165,7 @@ export async function getRawResults(
       metric_value
     FROM results
     WHERE ${conditions.join(' AND ')}
-    ORDER BY metric_name ASC, threads ASC, iteration ASC
+    ORDER BY threads ASC, iteration ASC, metric_name ASC
     LIMIT ? OFFSET ?;
   `;
   params.push(limit, offset);

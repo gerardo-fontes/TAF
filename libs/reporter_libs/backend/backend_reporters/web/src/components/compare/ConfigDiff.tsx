@@ -130,7 +130,18 @@ export function ConfigDiff({
           </thead>
           <tbody className="divide-y divide-slate-800/60">
             {filtered.map((r) => (
-              <tr key={r.name} className="hover:bg-slate-800/30">
+              <tr
+                key={r.name}
+                className={
+                  r.status === 'changed'
+                    ? 'bg-amber-500/15 hover:bg-amber-500/25'
+                    : r.status === 'added'
+                    ? 'bg-emerald-500/15 hover:bg-emerald-500/25'
+                    : r.status === 'removed'
+                    ? 'bg-rose-500/15 hover:bg-rose-500/25'
+                    : 'hover:bg-slate-800/30'
+                }
+              >
                 <td className="py-2.5 px-4 font-mono text-slate-200">{r.name}</td>
                 <td className="py-2.5 px-4 font-mono text-slate-300">{r.baselineValue ?? '—'}</td>
                 <td className="py-2.5 px-4 font-mono text-slate-300">{r.candidateValue ?? '—'}</td>

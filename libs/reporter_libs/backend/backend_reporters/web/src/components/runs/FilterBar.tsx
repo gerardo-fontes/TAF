@@ -43,6 +43,7 @@ export function FilterBar({ facets }: FilterBarProps) {
   const currentVersion = searchParams.get('dbVersion') || '';
   const currentWorkload = searchParams.get('workloadHash') || '';
   const currentTag = searchParams.get('tag') || '';
+  const currentTestType = searchParams.get('testType') || searchParams.get('test_type') || '';
   const currentDays = searchParams.get('days') || '';
   const currentBaseline = searchParams.get('baseline') || '';
   const currentSearch = searchParams.get('search') || '';
@@ -55,6 +56,7 @@ export function FilterBar({ facets }: FilterBarProps) {
     currentVersion,
     currentWorkload,
     currentTag,
+    currentTestType,
     currentDays,
     currentBaseline,
     currentSearch,
@@ -144,7 +146,7 @@ export function FilterBar({ facets }: FilterBarProps) {
       </div>
 
       {/* Dropdown Filters Grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-2 pt-2 border-t border-slate-800/80">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-8 gap-2 pt-2 border-t border-slate-800/80">
         {/* 1. Test Suite */}
         <div>
           <label htmlFor="filter-suite-select" className="block text-[11px] font-medium text-slate-400 mb-1">Suite</label>
@@ -256,7 +258,26 @@ export function FilterBar({ facets }: FilterBarProps) {
           </select>
         </div>
 
-        {/* 7. Workload Hash */}
+        {/* 7. Test Type */}
+        <div>
+          <label htmlFor="filter-test-type-select" className="block text-[11px] font-medium text-slate-400 mb-1">Test Type</label>
+          <select
+            id="filter-test-type-select"
+            aria-label="Filter by Test Type"
+            value={currentTestType}
+            onChange={(e) => updateParam('testType', e.target.value)}
+            className="w-full rounded-md border border-slate-800 bg-slate-950 py-1.5 px-2 text-xs text-slate-200 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+          >
+            <option value="">All Test Types</option>
+            {facets.testTypes.map((t) => (
+              <option key={t} value={t}>
+                {t}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* 8. Workload Hash */}
         <div>
           <label htmlFor="filter-hash-select" className="block text-[11px] font-medium text-slate-400 mb-1">Workload</label>
           <select

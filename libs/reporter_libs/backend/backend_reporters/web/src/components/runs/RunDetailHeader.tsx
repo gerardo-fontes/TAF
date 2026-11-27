@@ -49,7 +49,7 @@ export function RunDetailHeader({ run }: RunDetailHeaderProps) {
           </div>
           <div>
             <span className="block text-[11px] text-slate-500">Iterations</span>
-            <span className="font-mono text-slate-200">{run.resultCount}</span>
+            <span className="font-mono text-slate-200">{run.iterationCount ?? run.resultCount}</span>
           </div>
           <div>
             <span className="block text-[11px] text-slate-500">Baseline</span>

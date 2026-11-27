@@ -42,6 +42,7 @@ interface MultiMetricGridProps {
   selectedMetric: string;
   onSelectMetric: (metric: string) => void;
   threadOfMaxChange?: number;
+  singleRun?: boolean;
 }
 
 const MAX_DISPLAYED_METRICS = 8;
@@ -52,6 +53,7 @@ export function MultiMetricGrid({
   selectedMetric,
   onSelectMetric,
   threadOfMaxChange,
+  singleRun = false,
 }: MultiMetricGridProps) {
   // Cap at 8 metrics for layout stability and performance
   const visibleMetrics = useMemo(() => {
@@ -119,6 +121,7 @@ export function MultiMetricGrid({
               isSelected={selectedMetric === m}
               onSelect={onSelectMetric}
               threadOfMaxChange={threadOfMaxChange}
+              singleRun={singleRun}
             />
           );
         })}

@@ -209,7 +209,7 @@ export function DashboardResultsTable({
       if (!row) {
         row = {
           key,
-          title: item.testCaseTag || item.candidateTestName,
+          title: item.candidateTestName,
           subtitle: `Candidate #${item.candidateRunId}`,
           tooltip: `${item.candidateTestName}\n${item.suiteName} on ${item.hostName}\n${item.dbMaker} ${item.dbVersion}`,
           latestTs: item.createdAt,
@@ -269,7 +269,7 @@ export function DashboardResultsTable({
           </p>
         </div>
       ) : (
-        <div ref={scrollRef} className="max-h-[70vh] overflow-auto">
+        <div ref={scrollRef} className="max-h-[75vh] overflow-auto overscroll-contain">
           <table className="border-separate border-spacing-0 text-xs font-sans">
             <thead>
               <tr>
@@ -509,7 +509,7 @@ function TriageModal({ item, entry, href, onClose, onSaved }: TriageModalProps) 
         <div className="flex items-start justify-between gap-3 border-b border-slate-800 p-4">
           <div className="min-w-0">
             <h2 id="triage-title" className="truncate font-mono text-sm font-bold text-white">
-              {item.testCaseTag || item.candidateTestName}
+              {item.candidateTestName}
             </h2>
             <p className="mt-0.5 font-mono text-[11px] text-slate-500">
               Candidate #{item.candidateRunId} vs Baseline #{item.baselineRunId}

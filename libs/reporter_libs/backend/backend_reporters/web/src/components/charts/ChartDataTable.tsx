@@ -43,6 +43,7 @@ interface ChartDataTableProps {
   candidateName: string;
   metricName: string;
   unit: string;
+  singleRun?: boolean;
 }
 
 export function ChartDataTable({
@@ -52,6 +53,7 @@ export function ChartDataTable({
   candidateName,
   metricName,
   unit,
+  singleRun = false,
 }: ChartDataTableProps) {
   return (
     <div className="overflow-x-auto rounded-lg border border-slate-800 bg-slate-950/60">
@@ -60,30 +62,63 @@ export function ChartDataTable({
         aria-label={`Data table alternative for ${metricName} thread scaling`}
       >
         <caption className="sr-only">
-          Thread scaling data table for {metricName} comparing {baselineName} and {candidateName}
+          {singleRun
+            ? `Thread scaling data table for ${metricName} (${candidateName})`
+            : `Thread scaling data table for ${metricName} comparing ${baselineName} and ${candidateName}`}
         </caption>
         <thead>
           <tr className="border-b border-slate-800 bg-slate-900/80 text-[11px] font-sans font-semibold text-slate-400">
             <th scope="col" className="px-3 py-2.5">Threads</th>
-            <th scope="col" className="px-3 py-2.5">
-              Baseline Avg ({unit || 'val'})
-            </th>
-            <th scope="col" className="px-3 py-2.5">
-              Baseline Iterations [Min, Max]
-            </th>
-            <th scope="col" className="px-3 py-2.5">
-              Candidate Avg ({unit || 'val'})
-            </th>
-            <th scope="col" className="px-3 py-2.5">
-              Candidate Iterations [Min, Max]
-            </th>
-            <th scope="col" className="px-3 py-2.5">Raw Diff</th>
-            <th scope="col" className="px-3 py-2.5">Delta %</th>
-            <th scope="col" className="px-3 py-2.5">Status</th>
+            {singleRun ? (
+              <>
+                <th scope="col" className="px-3 py-2.5">
+                  Avg ({unit || 'val'})
+                </th>
+                <th scope="col" className="px-3 py-2.5">
+                  Iterations [Min, Max]
+                </th>
+              </>
+            ) : (
+              <>
+                <th scope="col" className="px-3 py-2.5">
+                  Baseline Avg ({unit || 'val'})
+                </th>
+                <th scope="col" className="px-3 py-2.5">
+                  Baseline Iterations [Min, Max]
+                </th>
+                <th scope="col" className="px-3 py-2.5">
+                  Candidate Avg ({unit || 'val'})
+                </th>
+                <th scope="col" className="px-3 py-2.5">
+                  Candidate Iterations [Min, Max]
+                </th>
+                <th scope="col" className="px-3 py-2.5">Raw Diff</th>
+                <th scope="col" className="px-3 py-2.5">Delta %</th>
+                <th scope="col" className="px-3 py-2.5">Status</th>
+              </>
+            )}
           </tr>
         </thead>
         <tbody className="divide-y divide-slate-800/60">
           {rows.map((row) => {
+            if (singleRun) {
+              return (
+                <tr key={row.threads} className="transition-colors hover:bg-slate-800/40">
+                  <th scope="row" className="px-3 py-2 font-bold text-white">
+                    {row.threads}t
+                  </th>
+                  <td className="px-3 py-2 text-blue-300 font-medium">
+                    {formatMetricNumber(row.candidateValue)}
+                  </td>
+                  <td className="px-3 py-2 text-slate-400 text-[11px]">
+                    {row.candidateMin !== undefined && row.candidateMax !== undefined
+                      ? `[${formatMetricNumber(row.candidateMin)}, ${formatMetricNumber(row.candidateMax)}]`
+                      : '—'}
+                  </td>
+                </tr>
+              );
+            }
+
             const status = classifyChangePct(row.changePct, thresholds);
             const isGain = row.changePct > 0;
             const isRegressed = row.changePct < -thresholds.pctFail;

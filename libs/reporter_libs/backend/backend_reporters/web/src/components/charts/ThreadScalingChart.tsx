@@ -55,6 +55,7 @@ export interface ThreadScalingChartProps {
   baselineName: string;
   candidateName: string;
   threadOfMaxChange: number;
+  singleRun?: boolean;
 }
 
 export function ThreadScalingChart({
@@ -63,6 +64,7 @@ export function ThreadScalingChart({
   baselineName,
   candidateName,
   threadOfMaxChange,
+  singleRun = false,
 }: ThreadScalingChartProps) {
   // 1. Extract distinct metric names
   const metrics = useMemo(() => {
@@ -349,7 +351,9 @@ export function ThreadScalingChart({
             </span>
           </div>
           <p className="text-xs text-slate-400 mt-0.5">
-            Overlaid baseline vs candidate throughput across concurrent thread workloads with iteration variance bands.
+            {singleRun
+              ? 'Throughput across concurrent thread workloads with iteration variance bands.'
+              : 'Overlaid baseline vs candidate throughput across concurrent thread workloads with iteration variance bands.'}
           </p>
         </div>
 
@@ -459,6 +463,7 @@ export function ThreadScalingChart({
             setViewMode('detail');
           }}
           threadOfMaxChange={threadOfMaxChange}
+          singleRun={singleRun}
         />
       )}
 
@@ -469,33 +474,50 @@ export function ThreadScalingChart({
           <div className="flex flex-wrap items-center justify-between gap-4 text-xs">
             {/* Visual Legend (Greyscale Accessible) */}
             <div className="flex flex-wrap items-center gap-5">
-              {/* Baseline */}
-              <div className="flex items-center gap-2">
-                <span className="flex items-center">
-                  <span className="w-4 h-0.5 bg-blue-500 rounded" />
-                  <span className="w-2.5 h-2.5 rounded-full bg-blue-500 -ml-1 border border-slate-900" />
-                </span>
-                <span className="text-slate-300 font-medium">
-                  Baseline (solid):{' '}
-                  <span className="text-slate-400 font-mono text-[11px] truncate max-w-[140px] inline-block align-bottom">
-                    {baselineName}
+              {singleRun ? (
+                <div className="flex items-center gap-2">
+                  <span className="flex items-center">
+                    <span className="w-4 h-0.5 bg-blue-500 rounded" />
+                    <span className="w-2.5 h-2.5 rounded-full bg-blue-500 -ml-1 border border-slate-900" />
                   </span>
-                </span>
-              </div>
+                  <span className="text-slate-300 font-medium">
+                    Test Run (solid):{' '}
+                    <span className="text-slate-400 font-mono text-[11px] truncate max-w-[200px] inline-block align-bottom">
+                      {candidateName}
+                    </span>
+                  </span>
+                </div>
+              ) : (
+                <>
+                  {/* Baseline */}
+                  <div className="flex items-center gap-2">
+                    <span className="flex items-center">
+                      <span className="w-4 h-0.5 bg-blue-500 rounded" />
+                      <span className="w-2.5 h-2.5 rounded-full bg-blue-500 -ml-1 border border-slate-900" />
+                    </span>
+                    <span className="text-slate-300 font-medium">
+                      Baseline (solid):{' '}
+                      <span className="text-slate-400 font-mono text-[11px] truncate max-w-[140px] inline-block align-bottom">
+                        {baselineName}
+                      </span>
+                    </span>
+                  </div>
 
-              {/* Candidate */}
-              <div className="flex items-center gap-2">
-                <span className="flex items-center">
-                  <span className="w-4 h-0.5 border-t-2 border-dashed border-purple-400" />
-                  <span className="w-2.5 h-2.5 rounded-sm bg-purple-400 -ml-1 border border-slate-900 rotate-45" />
-                </span>
-                <span className="text-slate-300 font-medium">
-                  Candidate (dashed):{' '}
-                  <span className="text-slate-400 font-mono text-[11px] truncate max-w-[140px] inline-block align-bottom">
-                    {candidateName}
-                  </span>
-                </span>
-              </div>
+                  {/* Candidate */}
+                  <div className="flex items-center gap-2">
+                    <span className="flex items-center">
+                      <span className="w-4 h-0.5 border-t-2 border-dashed border-purple-400" />
+                      <span className="w-2.5 h-2.5 rounded-sm bg-purple-400 -ml-1 border border-slate-900 rotate-45" />
+                    </span>
+                    <span className="text-slate-300 font-medium">
+                      Candidate (dashed):{' '}
+                      <span className="text-slate-400 font-mono text-[11px] truncate max-w-[140px] inline-block align-bottom">
+                        {candidateName}
+                      </span>
+                    </span>
+                  </div>
+                </>
+              )}
 
               {/* Iteration Variance */}
               <div className="flex items-center gap-1.5 text-slate-400 text-[11px]">
@@ -504,7 +526,7 @@ export function ThreadScalingChart({
               </div>
 
               {/* Max Delta Line */}
-              {threadOfMaxChange > 0 && (
+              {!singleRun && threadOfMaxChange > 0 && (
                 <div className="hidden sm:flex items-center gap-2">
                   <span className="w-4 h-0.5 border-t border-dashed border-amber-400" />
                   <span className="text-slate-400 text-[11px]">
@@ -515,23 +537,25 @@ export function ThreadScalingChart({
             </div>
 
             {/* Metric Direction Selector (Gating Threshold Bands) */}
-            <div className="flex items-center gap-2">
-              <span className="text-[11px] text-slate-400">Direction:</span>
-              <select
-                value={metricDirection}
-                onChange={(e) => handleDirectionChange(e.target.value as MetricDirection)}
-                className="rounded-lg border border-slate-800 bg-slate-950 px-2 py-1 text-xs font-medium text-slate-200 focus:border-blue-500 focus:outline-none"
-                aria-label="Select metric direction for threshold band rendering"
-              >
-                <option value="none">No bands (raw data)</option>
-                <option value="higher">Higher is better (throughput)</option>
-                <option value="lower">Lower is better (latency/cost)</option>
-              </select>
-            </div>
+            {!singleRun && (
+              <div className="flex items-center gap-2">
+                <span className="text-[11px] text-slate-400">Direction:</span>
+                <select
+                  value={metricDirection}
+                  onChange={(e) => handleDirectionChange(e.target.value as MetricDirection)}
+                  className="rounded-lg border border-slate-800 bg-slate-950 px-2 py-1 text-xs font-medium text-slate-200 focus:border-blue-500 focus:outline-none"
+                  aria-label="Select metric direction for threshold band rendering"
+                >
+                  <option value="none">No bands (raw data)</option>
+                  <option value="higher">Higher is better (throughput)</option>
+                  <option value="lower">Lower is better (latency/cost)</option>
+                </select>
+              </div>
+            )}
           </div>
 
           {/* Metric Direction Notice when 'none' */}
-          {metricDirection === 'none' && (
+          {!singleRun && metricDirection === 'none' && (
             <div className="flex items-center justify-between rounded-lg border border-slate-800/80 bg-slate-950/40 px-3 py-2 text-xs text-slate-400">
               <div className="flex items-center gap-2">
                 <span className="text-slate-500">ℹ️</span>
@@ -560,7 +584,7 @@ export function ThreadScalingChart({
           )}
 
           {/* Active Threshold Bands Legend if enabled */}
-          {metricDirection !== 'none' && (
+          {!singleRun && metricDirection !== 'none' && (
             <div className="flex flex-wrap items-center gap-4 text-[11px] text-slate-400 bg-slate-950/50 p-2 rounded-lg border border-slate-800">
               <span className="text-slate-300 font-semibold">Active Threshold Bands:</span>
               <span className="flex items-center gap-1.5">
@@ -594,7 +618,7 @@ export function ThreadScalingChart({
               </defs>
 
               {/* D3-Shape Threshold Bands (Background) */}
-              {thresholdBands && (
+              {!singleRun && thresholdBands && (
                 <g className="threshold-bands">
                   {thresholdBands.gainArea && (
                     <path
@@ -703,7 +727,7 @@ export function ThreadScalingChart({
               )}
 
               {/* Candidate Iteration Variance Band (Shaded area behind line) */}
-              {candidateVarianceArea && (
+              {!singleRun && candidateVarianceArea && (
                 <path
                   d={candidateVarianceArea}
                   fill={CHART_SERIES.candidate.varianceBandFill}
@@ -725,7 +749,7 @@ export function ThreadScalingChart({
               )}
 
               {/* Candidate Line Curve (Dashed Purple) */}
-              {candidatePath && (
+              {!singleRun && candidatePath && (
                 <path
                   d={candidatePath}
                   fill="none"
@@ -742,7 +766,7 @@ export function ThreadScalingChart({
                 const x = getX(p.threads);
                 const yBase = yScale(p.baselineValue);
                 const yCand = yScale(p.candidateValue);
-                const isMax = p.threads === threadOfMaxChange;
+                const isMax = !singleRun && p.threads === threadOfMaxChange;
                 const isHovered = p.threads === hoveredThread;
 
                 return (
@@ -760,7 +784,7 @@ export function ThreadScalingChart({
                       />
                     )}
 
-                    {/* Baseline Marker (Circle) */}
+                    {/* Baseline / Single-Run Marker (Circle) */}
                     <circle
                       cx={x}
                       cy={yBase}
@@ -771,16 +795,18 @@ export function ThreadScalingChart({
                     />
 
                     {/* Candidate Marker (Diamond) */}
-                    <rect
-                      x={x - (isHovered ? 5 : 3.5)}
-                      y={yCand - (isHovered ? 5 : 3.5)}
-                      width={isHovered ? 10 : 7}
-                      height={isHovered ? 10 : 7}
-                      transform={`rotate(45 ${x} ${yCand})`}
-                      fill={CHART_SERIES.candidate.markerFill}
-                      stroke={CHART_SERIES.candidate.markerStroke}
-                      strokeWidth="2"
-                    />
+                    {!singleRun && (
+                      <rect
+                        x={x - (isHovered ? 5 : 3.5)}
+                        y={yCand - (isHovered ? 5 : 3.5)}
+                        width={isHovered ? 10 : 7}
+                        height={isHovered ? 10 : 7}
+                        transform={`rotate(45 ${x} ${yCand})`}
+                        fill={CHART_SERIES.candidate.markerFill}
+                        stroke={CHART_SERIES.candidate.markerStroke}
+                        strokeWidth="2"
+                      />
+                    )}
 
                     {/* Hover Hit Target Column */}
                     <rect
@@ -834,46 +860,62 @@ export function ThreadScalingChart({
                 </div>
 
                 <div className="space-y-1.5 font-mono text-[11px]">
-                  <div className="flex items-center justify-between gap-4">
-                    <span className="text-blue-400 font-medium">Baseline:</span>
-                    <span className="text-slate-200">
-                      {formatMetricNumber(hoveredPoint.baselineValue)} {unit}
-                      {hoveredPoint.baselineMin !== undefined && (
-                        <span className="text-slate-500 text-[10px] ml-1">
-                          [{formatMetricNumber(hoveredPoint.baselineMin)}, {formatMetricNumber(hoveredPoint.baselineMax ?? hoveredPoint.baselineValue)}]
+                  {singleRun ? (
+                    <div className="flex items-center justify-between gap-4">
+                      <span className="text-blue-400 font-medium">Avg:</span>
+                      <span className="text-white font-semibold">
+                        {formatMetricNumber(hoveredPoint.candidateValue)} {unit}
+                        {hoveredPoint.candidateMin !== undefined && (
+                          <span className="text-slate-500 text-[10px] ml-1">
+                            [{formatMetricNumber(hoveredPoint.candidateMin)}, {formatMetricNumber(hoveredPoint.candidateMax ?? hoveredPoint.candidateValue)}]
+                          </span>
+                        )}
+                      </span>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="flex items-center justify-between gap-4">
+                        <span className="text-blue-400 font-medium">Baseline:</span>
+                        <span className="text-slate-200">
+                          {formatMetricNumber(hoveredPoint.baselineValue)} {unit}
+                          {hoveredPoint.baselineMin !== undefined && (
+                            <span className="text-slate-500 text-[10px] ml-1">
+                              [{formatMetricNumber(hoveredPoint.baselineMin)}, {formatMetricNumber(hoveredPoint.baselineMax ?? hoveredPoint.baselineValue)}]
+                            </span>
+                          )}
                         </span>
-                      )}
-                    </span>
-                  </div>
+                      </div>
 
-                  <div className="flex items-center justify-between gap-4">
-                    <span className="text-purple-300 font-medium">Candidate:</span>
-                    <span className="text-white font-semibold">
-                      {formatMetricNumber(hoveredPoint.candidateValue)} {unit}
-                      {hoveredPoint.candidateMin !== undefined && (
-                        <span className="text-slate-500 text-[10px] ml-1">
-                          [{formatMetricNumber(hoveredPoint.candidateMin)}, {formatMetricNumber(hoveredPoint.candidateMax ?? hoveredPoint.candidateValue)}]
+                      <div className="flex items-center justify-between gap-4">
+                        <span className="text-purple-300 font-medium">Candidate:</span>
+                        <span className="text-white font-semibold">
+                          {formatMetricNumber(hoveredPoint.candidateValue)} {unit}
+                          {hoveredPoint.candidateMin !== undefined && (
+                            <span className="text-slate-500 text-[10px] ml-1">
+                              [{formatMetricNumber(hoveredPoint.candidateMin)}, {formatMetricNumber(hoveredPoint.candidateMax ?? hoveredPoint.candidateValue)}]
+                            </span>
+                          )}
                         </span>
-                      )}
-                    </span>
-                  </div>
+                      </div>
 
-                  <div className="flex items-center justify-between gap-4 border-t border-slate-800/80 pt-1.5 font-sans">
-                    <span className="text-slate-400">Delta:</span>
-                    <span
-                      className={`font-mono font-bold ${
-                        hoveredPoint.changePct > 0
-                          ? 'text-emerald-400'
-                          : hoveredPoint.changePct < -thresholds.pctWarning
-                          ? 'text-rose-400'
-                          : 'text-slate-200'
-                      }`}
-                    >
-                      {formatDeltaPct(hoveredPoint.changePct)} (
-                      {hoveredPoint.rawDiff > 0 ? '+' : ''}
-                      {formatMetricNumber(hoveredPoint.rawDiff)})
-                    </span>
-                  </div>
+                      <div className="flex items-center justify-between gap-4 border-t border-slate-800/80 pt-1.5 font-sans">
+                        <span className="text-slate-400">Delta:</span>
+                        <span
+                          className={`font-mono font-bold ${
+                            hoveredPoint.changePct > 0
+                              ? 'text-emerald-400'
+                              : hoveredPoint.changePct < -thresholds.pctWarning
+                              ? 'text-rose-400'
+                              : 'text-slate-200'
+                          }`}
+                        >
+                          {formatDeltaPct(hoveredPoint.changePct)} (
+                          {hoveredPoint.rawDiff > 0 ? '+' : ''}
+                          {formatMetricNumber(hoveredPoint.rawDiff)})
+                        </span>
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
             )}
@@ -891,6 +933,7 @@ export function ThreadScalingChart({
             candidateName={candidateName}
             metricName={activeMetric}
             unit={unit}
+            singleRun={singleRun}
           />
         </div>
       )}

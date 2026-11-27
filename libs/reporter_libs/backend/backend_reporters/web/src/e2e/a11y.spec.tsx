@@ -143,6 +143,7 @@ describe('Automated Accessibility Audits (axe-core WCAG 2.1 AA)', () => {
           dbVersions: ['11.4.3', '11.8.1'],
           totalRuns: 20,
           tags: ['LTS_BASELINE'],
+          testTypes: ['adhoc', 'release'],
           systems: [
             {
               id: '1',

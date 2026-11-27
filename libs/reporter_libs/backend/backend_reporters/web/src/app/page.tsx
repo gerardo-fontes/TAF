@@ -44,6 +44,7 @@ export default async function RunsPage({ searchParams }: PageProps) {
     dbVersion: typeof sp.dbVersion === 'string' ? sp.dbVersion : undefined,
     workloadHash: typeof sp.workloadHash === 'string' ? sp.workloadHash : undefined,
     tag: typeof sp.tag === 'string' ? sp.tag : undefined,
+    testType: typeof sp.testType === 'string' ? sp.testType : typeof sp.test_type === 'string' ? sp.test_type : undefined,
     isBaseline: sp.baseline === 'true' ? true : sp.baseline === 'false' ? false : undefined,
     days: sp.days ? parseInt(sp.days as string, 10) : undefined,
     search: typeof sp.search === 'string' ? sp.search : undefined,
@@ -62,6 +63,7 @@ export default async function RunsPage({ searchParams }: PageProps) {
     filters.dbVersion ||
     filters.workloadHash ||
     filters.tag ||
+    filters.testType ||
     filters.isBaseline !== undefined ||
     filters.days ||
     filters.search
@@ -77,6 +79,11 @@ export default async function RunsPage({ searchParams }: PageProps) {
             <span className="text-xs font-normal text-slate-400 bg-slate-900 border border-slate-800 px-2 py-0.5 rounded-full">
               {facets.totalRuns} total runs
             </span>
+            {filters.testType && (
+              <span className="text-xs font-normal text-blue-300 bg-blue-950 border border-blue-800/60 px-2 py-0.5 rounded-full">
+                test type: {filters.testType}
+              </span>
+            )}
           </h1>
           <p className="text-xs text-slate-400 mt-1">
             Browse and filter benchmark runs across test suites, systems, and database versions. Select any 2 runs to compare.

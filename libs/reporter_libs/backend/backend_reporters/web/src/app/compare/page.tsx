@@ -144,8 +144,8 @@ export default async function ComparePage({ searchParams }: ComparePageProps) {
           <ThreadScalingChart
             rows={comparison.rows}
             thresholds={comparison.thresholds}
-            baselineName={baselineRun.testCaseTag || baselineRun.testName}
-            candidateName={candidateRun.testCaseTag || candidateRun.testName}
+            baselineName={baselineRun.testName}
+            candidateName={candidateRun.testName}
             threadOfMaxChange={comparison.threadOfMaxChange}
           />
 

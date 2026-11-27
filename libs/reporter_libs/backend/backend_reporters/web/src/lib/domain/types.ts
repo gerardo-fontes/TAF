@@ -74,6 +74,7 @@ export interface RunSummary {
   threads: number[];
   resultCount: number;
   comparisonCount: number;
+  iterationCount?: number;
 }
 
 export interface RunDetail extends RunSummary {
@@ -93,6 +94,8 @@ export interface RunDetail extends RunSummary {
   pctDurationDrift: number;
   testType?: string;
   comments?: string;
+  testRunProperties?: string | null;
+  testRunPropertiesContents?: string | null;
   autogenTags?: Record<string, unknown> | null;
   metadata?: Record<string, unknown> | null;
 }
@@ -344,6 +347,7 @@ export interface RunFacets {
   systems: SystemFacet[];
   workloadHashes: WorkloadHashFacet[];
   tags: string[];
+  testTypes: string[];
   totalRuns: number;
 }
 

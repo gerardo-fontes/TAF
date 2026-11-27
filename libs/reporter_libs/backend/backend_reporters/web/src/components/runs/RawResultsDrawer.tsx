@@ -80,7 +80,10 @@ export function RawResultsDrawer({ runId }: RawResultsDrawerProps) {
                           Thread Count: {threads}
                         </td>
                       </tr>
-                      {groupRows.map((r, idx) => (
+                      {groupRows
+                        .slice()
+                        .sort((a, b) => a.iteration - b.iteration || String(a.metricName).localeCompare(String(b.metricName), undefined, { numeric: true, sensitivity: 'base' }))
+                        .map((r, idx) => (
                         <tr key={idx} className="hover:bg-slate-800/30">
                           <td className="py-2 px-3 font-mono text-slate-200">{r.metricName}</td>
                           <td className="py-2 px-3 text-slate-400">{r.metricType || '—'}</td>

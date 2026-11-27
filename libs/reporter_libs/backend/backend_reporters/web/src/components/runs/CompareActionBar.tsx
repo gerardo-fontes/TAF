@@ -69,8 +69,8 @@ export function CompareActionBar() {
             {baseline ? (
               <div className="flex items-center gap-2">
                 <span className="font-mono font-bold text-white">#{baseline.id}</span>
-                <span className="text-slate-300 font-medium truncate max-w-[140px]">
-                  {baseline.testCaseTag || baseline.testName}
+                <span className="text-slate-300 font-medium truncate max-w-[140px]" title={baseline.testName || baseline.testCaseTag || undefined}>
+                  {baseline.testName || baseline.testCaseTag}
                 </span>
                 <button
                   type="button"
@@ -107,8 +107,8 @@ export function CompareActionBar() {
             {candidate ? (
               <div className="flex items-center gap-2">
                 <span className="font-mono font-bold text-white">#{candidate.id}</span>
-                <span className="text-slate-300 font-medium truncate max-w-[140px]">
-                  {candidate.testCaseTag || candidate.testName}
+                <span className="text-slate-300 font-medium truncate max-w-[140px]" title={candidate.testName || candidate.testCaseTag || undefined}>
+                  {candidate.testName || candidate.testCaseTag}
                 </span>
                 <button
                   type="button"

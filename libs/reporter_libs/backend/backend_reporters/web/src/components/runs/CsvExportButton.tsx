@@ -31,7 +31,12 @@ function escapeCsv(value: unknown): string {
 function matrixToCsv(matrix: MetricSummaryRow[]): string {
   const header = ['Metric', 'Type', 'Dimension', 'Unit', 'Threads', 'Count', 'Min', 'Max', 'Avg', 'StdDev'];
   const lines = [header.join(',')];
-  for (const r of matrix) {
+  const sorted = [...matrix].sort((a, b) => {
+    const nameCmp = String(a.metricName).localeCompare(String(b.metricName), undefined, { numeric: true, sensitivity: 'base' });
+    if (nameCmp !== 0) return nameCmp;
+    return a.threads - b.threads;
+  });
+  for (const r of sorted) {
     lines.push(
       [
         r.metricName,
@@ -66,7 +71,12 @@ export function CsvExportButton({ runId, matrix }: CsvExportButtonProps) {
       const res = await fetch(`/api/runs/${runId}/results?raw=true&limit=1000`);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const json = await res.json();
-      const raw: RawResultRow[] = json.data?.raw ?? [];
+      const raw: RawResultRow[] = (json.data?.raw ?? []).sort(
+        (a: RawResultRow, b: RawResultRow) =>
+          a.threads - b.threads ||
+          a.iteration - b.iteration ||
+          String(a.metricName).localeCompare(String(b.metricName), undefined, { numeric: true, sensitivity: 'base' })
+      );
 
       const matrixCsv = matrixToCsv(matrix);
       const rawHeader = ['Metric', 'Type', 'Dimension', 'Unit', 'Threads', 'Iteration', 'Value'];

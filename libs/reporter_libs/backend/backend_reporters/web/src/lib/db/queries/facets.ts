@@ -36,6 +36,7 @@ export async function listFacets(): Promise<RunFacets> {
     systemRows,
     workloadRows,
     tagRows,
+    testTypeRows,
     totalCountRows,
   ] = await Promise.all([
     query<Array<{ name: string; count: number }>>(
@@ -84,6 +85,12 @@ export async function listFacets(): Promise<RunFacets> {
        WHERE test_case_tag IS NOT NULL AND test_case_tag != ''
        ORDER BY tag ASC`
     ),
+    query<Array<{ testType: string }>>(
+      `SELECT DISTINCT test_type AS testType
+       FROM test_run
+       WHERE test_type IS NOT NULL AND test_type != ''
+       ORDER BY testType ASC`
+    ),
     query<Array<{ total: number }>>(
       `SELECT COUNT(*) AS total FROM test_run`
     ),
@@ -114,6 +121,7 @@ export async function listFacets(): Promise<RunFacets> {
     systems,
     workloadHashes,
     tags: tagRows.map((t) => t.tag),
+    testTypes: testTypeRows.map((t) => t.testType),
     totalRuns: Number(totalCountRows[0]?.total || 0),
   };
 }

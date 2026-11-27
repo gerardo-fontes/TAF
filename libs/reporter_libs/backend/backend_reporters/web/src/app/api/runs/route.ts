@@ -33,6 +33,8 @@ const QuerySchema = z.object({
   dbVersion: z.string().optional(),
   workloadHash: z.string().optional(),
   tag: z.string().optional(),
+  testType: z.string().optional(),
+  test_type: z.string().optional(),
   isBaseline: z
     .string()
     .optional()
@@ -59,7 +61,11 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const result = await listRuns(parsed.data);
+    const filters = {
+      ...parsed.data,
+      testType: parsed.data.testType ?? parsed.data.test_type,
+    };
+    const result = await listRuns(filters);
     return apiSuccess(result.data, {
       tookMs: Date.now() - start,
       cursor: result.meta.nextCursor,
